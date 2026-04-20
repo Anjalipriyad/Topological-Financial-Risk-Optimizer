@@ -1,79 +1,67 @@
-/**
- * SearchBar — Prominent ticker search + "Analyze Target" button.
- */
 import { useState } from 'react';
 
-export default function SearchBar({ onSearch, isLoading = false }) {
+/**
+ * SearchBar — Minimalist high-contrast search.
+ */
+export default function SearchBar({ onSearch, isLoading }) {
   const [ticker, setTicker] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const cleaned = ticker.trim().toUpperCase();
-    if (cleaned && !isLoading) {
-      onSearch(cleaned);
+    if (ticker.trim()) {
+      onSearch(ticker.toUpperCase());
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-xl mx-auto">
-      <div
-        className="flex items-center gap-2 rounded-2xl border border-[var(--border-subtle)]
-                    bg-[var(--bg-card)] p-1.5 shadow-lg shadow-black/20
-                    focus-within:border-[var(--accent-indigo)] focus-within:shadow-[0_0_0_3px_var(--glow-indigo)]
-                    transition-all duration-300"
-      >
-        {/* Search icon */}
-        <div className="pl-3 text-[var(--text-muted)]">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+    <div className="w-full max-w-2xl animate-fade-in-up">
+      <form onSubmit={handleSubmit} className="relative group">
+        <div className="relative flex items-center bg-[var(--bg-surface)] rounded-2xl p-1.5 shadow-2xl border border-[var(--border-subtle)] focus-within:border-[var(--text-muted)] focus-within:bg-[var(--bg-card)] transition-all">
+          <div className="pl-5 flex items-center gap-3 text-[var(--text-muted)]">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          
+          <input
+            type="text"
+            value={ticker}
+            onChange={(e) => setTicker(e.target.value)}
+            placeholder="Search symbol (e.g. BTC, NVDA, RELIANCE.NS)"
+            className="flex-1 bg-transparent border-none outline-none px-4 py-4 text-lg font-bold text-white placeholder:text-[var(--text-muted)] placeholder:font-medium font-outfit"
+            disabled={isLoading}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoading || !ticker.trim()}
+            className="flex items-center gap-2 px-10 py-4 rounded-xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] transition-all hover:bg-[var(--text-secondary)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-10 disabled:pointer-events-none shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+          >
+            {isLoading ? (
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : (
+              "Ingest"
+            )}
+          </button>
         </div>
+      </form>
 
-        {/* Input */}
-        <input
-          id="ticker-search"
-          type="text"
-          value={ticker}
-          onChange={(e) => setTicker(e.target.value)}
-          placeholder="Enter ticker symbol (e.g. AAPL)"
-          className="flex-1 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)]
-                     text-sm font-medium outline-none py-2.5 px-1
-                     font-['JetBrains_Mono',monospace] tracking-wider uppercase"
-          autoComplete="off"
-          disabled={isLoading}
-        />
-
-        {/* Button */}
-        <button
-          id="analyze-button"
-          type="submit"
-          disabled={isLoading || !ticker.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                     bg-gradient-to-r from-indigo-600 to-indigo-500
-                     text-white shadow-md shadow-indigo-500/20
-                     hover:from-indigo-500 hover:to-indigo-400 hover:shadow-lg hover:shadow-indigo-500/30
-                     active:scale-[0.97]
-                     disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none
-                     transition-all duration-200"
-        >
-          {isLoading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Analyzing…
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Analyze Target
-            </>
-          )}
-        </button>
+      {/* Suggestion tags */}
+      <div className="flex items-center justify-center gap-5 mt-8">
+        <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-[0.3em]">Quicklink</span>
+        {['NVDA', 'TSLA', 'BTC', 'RELIANCE.NS'].map(t => (
+          <button
+            key={t}
+            onClick={() => { setTicker(t); onSearch(t); }}
+            className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-white transition-colors border-b border-transparent hover:border-white pb-0.5"
+          >
+            {t}
+          </button>
+        ))}
       </div>
-    </form>
+    </div>
   );
 }
