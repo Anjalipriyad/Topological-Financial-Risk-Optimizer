@@ -29,11 +29,15 @@ Using the highly volatile structural regime of individual tech stocks over exact
 
 | Model | Accuracy | F1-Score | MCC |
 | :--- | :--- | :--- | :--- |
-| **Baseline (MACD, RSI, ATR Only)** | 66.29% | 0.3750 | 0.1570 |
-| **Proposed Full XGBoost (PCA-TDA + TA)** | 70.79% | 0.2778 | 0.0985 |
-| **Soft-Voting Ensemble (Ultimate)** | **75.28%** | **0.4500** | **0.2906** |
+| **Baseline (MACD, RSI, ATR Only)** | 67.42% | 0.3830 | 0.1717 |
+| **XGBoost (Standalone TDA+TA)** | 70.79% | 0.2778 | 0.0985 |
+| **Ensemble (Proposed Architecture)** | **75.28%** | **0.4500** | **0.2906** |
 
-By incorporating a **Soft-Voting Ensemble** (XGBoost, Random Forest, Logistic Regression) over the PCA-compressed non-Euclidean features, the pipeline averages the probability space boundaries. **This universally defeats traditional technical analysis baselines across Accuracy, Precision, and Recall.**
+### The Proposed Architecture: Soft-Voting Ensemble
+By incorporating a **Soft-Voting Ensemble** (XGBoost + Random Forest + Logistic Regression) over the PCA-compressed non-Euclidean features, the pipeline averages the probability space boundaries. This universally defeats traditional technical analysis baselines and standalone ML models by:
+1. **XGBoost:** Capturing complex structural "shattering" in the topological manifold.
+2. **Random Forest:** Reducing variance via bagging to prevent overfitting on noisy financial regimes.
+3. **Logistic Regression:** Providing a linear hedge to ground the model predictions in standard market trends.
 
 ---
 

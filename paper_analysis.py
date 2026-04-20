@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 
 # ── 1. DATA AND TARGET GENERATION ──────────────────────────────────────────────
 
-def fetch_data(ticker="AAPL", period="2y"):
+def fetch_data(ticker="RELIANCE.NS", period="2y"):
     df = yf.download(ticker, period=period, progress=False)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
@@ -179,7 +179,7 @@ def evaluate_model(X, y, classifier='xgboost', feature_names=None):
 # ── RUN PAPERS EXPERIMENTS ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ticker = "AAPL"
+    ticker = "MSFT"
     print(f"===========================================================")
     print(f" RESEARCH PAPER ANALYSIS SCRIPT : TARGET -> {ticker}")
     print(f"===========================================================\n")
