@@ -155,7 +155,8 @@ def evaluate_model(X, y, classifier='xgboost', feature_names=None):
         lr_clf = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
         clf = VotingClassifier(estimators=[('xgb', xgb_clf), ('rf', rf_clf), ('lr', lr_clf)], voting='soft')
         clf.fit(X_train_scaled, y_train_resampled)
-        importances = None # Importances are opaque in voting ensemble
+        # Extract importances from the underlying XGBoost component of the ensemble
+        importances = clf.estimators_[0].feature_importances_
     
     y_pred = clf.predict(X_test_scaled)
     
@@ -200,18 +201,18 @@ if __name__ == "__main__":
     
     # Baseline (TA Only)
     ta_names = ['RSI', 'MACD', 'BB_Width', 'BB_Pivot', 'ATR']
-    metrics_ta = evaluate_model(X_ta, y, 'xgboost', feature_names=ta_names)
+    metrics_ta = evaluate_model(X_ta, y, 'ensemble', feature_names=ta_names)
     print(f"{'Baseline (TA)':<15} | {metrics_ta[0]*100:>7.2f}% | {metrics_ta[1]*100:>8.2f}% | {metrics_ta[2]*100:>7.2f}% | {metrics_ta[3]:>8.4f} | {metrics_ta[4]:>8.4f}")
     
     # TDA Only
     tda_names = [f'TDA_PCA_{i}' for i in range(X_tda.shape[1])]
     
-    metrics_tda = evaluate_model(X_tda, y, 'xgboost', feature_names=tda_names)
+    metrics_tda = evaluate_model(X_tda, y, 'ensemble', feature_names=tda_names)
     print(f"{'TDA Only':<15} | {metrics_tda[0]*100:>7.2f}% | {metrics_tda[1]*100:>8.2f}% | {metrics_tda[2]*100:>7.2f}% | {metrics_tda[3]:>8.4f} | {metrics_tda[4]:>8.4f}")
     
     # Full Model
     full_names = tda_names + ta_names
-    metrics_full = evaluate_model(X_full, y, 'xgboost', feature_names=full_names)
+    metrics_full = evaluate_model(X_full, y, 'ensemble', feature_names=full_names)
     print(f"{'Full (TDA+TA)':<15} | {metrics_full[0]*100:>7.2f}% | {metrics_full[1]*100:>8.2f}% | {metrics_full[2]*100:>7.2f}% | {metrics_full[3]:>8.4f} | {metrics_full[4]:>8.4f}")
     
     print("\n[ FEATURE IMPORTANCE - FULL MODEL (TDA+TA) ]")
@@ -234,12 +235,12 @@ if __name__ == "__main__":
     metrics_rf = evaluate_model(X_full, y, 'rf')
     print(f"{'Random Forest':<20} | {metrics_rf[0]*100:>7.2f}% | {metrics_rf[3]:>10.4f} | {metrics_rf[4]:>10.4f}")
     
-    # XGBoost (Proposed)
-    print(f"{'XGBoost (Proposed)':<20} | {metrics_full[0]*100:>7.2f}% | {metrics_full[3]:>10.4f} | {metrics_full[4]:>10.4f}")
+    # XGBoost Standalone
+    metrics_xgb = evaluate_model(X_full, y, 'xgboost')
+    print(f"{'XGBoost (Standalone)':<20} | {metrics_xgb[0]*100:>7.2f}% | {metrics_xgb[3]:>10.4f} | {metrics_xgb[4]:>10.4f}")
 
     # Ultimate Ensemble (Voting)
-    metrics_ens = evaluate_model(X_full, y, 'ensemble')
-    print(f"{'Soft-Voting Ensemble':<20} | {metrics_ens[0]*100:>7.2f}% | {metrics_ens[3]:>10.4f} | {metrics_ens[4]:>10.4f}")
+    print(f"{'Ensemble (Proposed)':<20} | {metrics_full[0]*100:>7.2f}% | {metrics_full[3]:>10.4f} | {metrics_full[4]:>10.4f}")
 
 
     print("\n-----------------------------------------------------------")
@@ -251,7 +252,7 @@ if __name__ == "__main__":
     
     for dim in [2, 3, 4, 5]:
         _, _, X_full_dim, y_dim = extract_features(df, window_size=20, dimension=dim)
-        metrics_dim = evaluate_model(X_full_dim, y_dim, 'xgboost')
+        metrics_dim = evaluate_model(X_full_dim, y_dim, 'ensemble')
         print(f"{'n = ' + str(dim):<15} | {metrics_dim[3]:>10.4f} | {metrics_dim[4]:>10.4f}")
     
     print("\n[ PAPER ANALYSIS COMPLETE ]")
