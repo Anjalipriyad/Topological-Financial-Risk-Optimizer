@@ -15,7 +15,7 @@ export default function HeroSection({ onSearch, isLoading, onNavigateResearch })
   const onMM = (e) => {
     const r = cRef.current?.getBoundingClientRect();
     if (!r) return;
-    setMp({ x: (e.clientX - r.left - r.width/2) / r.width, y: (e.clientY - r.top - r.height/2) / r.height });
+    setMp({ x: (e.clientX - r.left - r.width / 2) / r.width, y: (e.clientY - r.top - r.height / 2) / r.height });
   };
 
   const onSubmit = (e) => { e.preventDefault(); if (ticker.trim()) onSearch(ticker.trim().toUpperCase()); };
@@ -108,7 +108,7 @@ export default function HeroSection({ onSearch, isLoading, onNavigateResearch })
 
         {/* Headline — MASSIVE, dramatic */}
         <h2 style={{ marginBottom: 20 }}>
-          {['Predict', 'Market'].map((w, i) => (
+          {['Predict', 'Share'].map((w, i) => (
             <span key={w} className={vis ? 'animate-slide-up' : ''} style={{
               display: 'inline-block', fontSize: 'clamp(42px, 7vw, 76px)', fontWeight: 900,
               color: 'var(--text-primary)', lineHeight: 1.05, letterSpacing: '-0.04em',
@@ -154,28 +154,28 @@ export default function HeroSection({ onSearch, isLoading, onNavigateResearch })
             boxShadow: '0 8px 40px rgba(26, 26, 46, 0.08), 0 2px 8px rgba(212, 168, 67, 0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
             overflow: 'hidden', transition: 'all 0.4s',
           }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(212, 168, 67, 0.5)';
-            e.currentTarget.style.boxShadow = '0 12px 50px rgba(212, 168, 67, 0.15), 0 4px 16px rgba(26, 26, 46, 0.08), inset 0 1px 0 rgba(255,255,255,0.9)';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-          }}
-          onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) {
-              e.currentTarget.style.borderColor = 'rgba(212, 168, 67, 0.20)';
-              e.currentTarget.style.boxShadow = '0 8px 40px rgba(26, 26, 46, 0.08), 0 2px 8px rgba(212, 168, 67, 0.06), inset 0 1px 0 rgba(255,255,255,0.8)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }
-          }}>
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(212, 168, 67, 0.5)';
+              e.currentTarget.style.boxShadow = '0 12px 50px rgba(212, 168, 67, 0.15), 0 4px 16px rgba(26, 26, 46, 0.08), inset 0 1px 0 rgba(255,255,255,0.9)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                e.currentTarget.style.borderColor = 'rgba(212, 168, 67, 0.20)';
+                e.currentTarget.style.boxShadow = '0 8px 40px rgba(26, 26, 46, 0.08), 0 2px 8px rgba(212, 168, 67, 0.06), inset 0 1px 0 rgba(255,255,255,0.8)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }
+            }}>
             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, color: 'var(--text-muted)' }}>
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35"/></svg>
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" /></svg>
             </div>
             <input type="text" value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="Enter ticker — NVDA, BTC, RELIANCE.NS…" disabled={isLoading} autoComplete="off" spellCheck={false}
               style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', padding: '18px 14px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', letterSpacing: '0.01em' }} />
             <MagneticButton type="submit" disabled={isLoading || !ticker.trim()} magnetRange={50} magnetStrength={0.2} className="btn-primary"
               style={{ borderRadius: '0 18px 18px 0', padding: '0 32px', minHeight: 60, fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: (isLoading || !ticker.trim()) ? 0.5 : 1, cursor: (isLoading || !ticker.trim()) ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #C5A028 0%, #D4A843 50%, #E8C547 100%)' }}>
               {isLoading ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: 'spin-cw 0.8s linear infinite' }}><circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round"/></svg>
-              ) : (<>Analyze <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg></>)}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: 'spin-cw 0.8s linear infinite' }}><circle cx="12" cy="12" r="10" strokeOpacity="0.3" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
+              ) : (<>Analyze <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></>)}
             </MagneticButton>
           </div>
         </form>
@@ -205,7 +205,7 @@ export default function HeroSection({ onSearch, isLoading, onNavigateResearch })
           onMouseEnter={e => { e.currentTarget.style.color = 'var(--blue)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
           onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
           Explore the research methodology
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
         </button>
 
 
