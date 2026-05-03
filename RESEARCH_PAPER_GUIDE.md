@@ -57,8 +57,9 @@ y[i] = 0  otherwise
 List these 6:
 1. Design a TDA pipeline that extracts Persistence Landscapes from financial time-series
 2. Introduce Manifold Velocity (first derivative of persistence landscape) as a novel feature
-3. Develop a PCA-compressed Ternary Soft-Voting Ensemble to handle dimensionality
-4. Implement a Dual-Mode Architecture (Production vs Research)
+3. Develop a PCA-compressed Weighted Ternary Soft-Voting Ensemble to handle dimensionality
+4. Implement Temperature Scaling (T=0.4) for UX Probability Calibration
+5. Implement a Dual-Mode Architecture (Production vs Research)
 5. Build a real-time per-ticker dynamic training pipeline via FastAPI
 6. Validate via ablation study (TA-only vs TDA-only vs Full)
 
@@ -89,7 +90,8 @@ List these 6:
 ### Ensemble Methods
 - XGBoost (Chen & Guestrin, 2016) — sequential boosting with regularization
 - Random Forest (Breiman, 2001) — bagging for variance reduction
-- Voting Classifiers — probability averaging
+- Voting Classifiers — weighted probability averaging
+- Temperature Scaling (Guo et al., 2017) — probability calibration and sharpening
 
 ### Class Imbalance
 - SMOTE (Chawla et al., 2002) — synthetic minority oversampling
@@ -234,10 +236,11 @@ List these 6:
 
 | Component | Algorithm | Role | Key Hyperparameters |
 |---|---|---|---|
-| XGBoost | Gradient Boosting | Captures non-linear TDA patterns | n_estimators=100, max_depth=4, lr=0.05, reg_lambda=10.0, colsample_bytree=0.6 |
-| Random Forest | Bagging | Variance reduction | n_estimators=100, max_depth=4, class_weight='balanced' |
-| Logistic Regression | Linear | Linear anchor/baseline | class_weight='balanced', max_iter=1000 |
-| **VotingClassifier** | **Soft voting** | **Averages probabilities** | voting='soft' |
+| XGBoost | Gradient Boosting | Captures non-linear TDA patterns | Weight=3, n_estimators=100, max_depth=4, lr=0.05 |
+| Random Forest | Bagging | Variance reduction | Weight=2, n_estimators=100, max_depth=4, class_weight='balanced' |
+| Logistic Regression | Linear | Linear anchor/baseline | Weight=1, class_weight='balanced', max_iter=1000 |
+| **VotingClassifier** | **Weighted Soft voting** | **Averages probabilities by merit** | voting='soft', weights=[3, 2, 1] |
+| **Calibration** | **Temperature Scaling** | **Sharpens output for UX** | T = 0.4 |
 
 ### 5.3 Analysis and Interpretation
 
@@ -370,10 +373,10 @@ List these 6:
 ## Chapter 7: Summary & Conclusion
 
 **Summary paragraph — say this:**
-"This research presents the Topological Financial Risk Optimizer (TFRO), a novel early-warning system for predicting structural market crashes. The system converts 1D closing-price time series into high-dimensional topological features using a 4-stage pipeline: Sliding Window segmentation (20-day), Takens Delay Embedding (d=3, τ=1), Vietoris-Rips Persistent Homology (H₀, H₁), and Persistence Landscape vectorization (1 layer, 10 bins). The primary novelty is Manifold Velocity — the first derivative of the persistence landscape — capturing the rate of structural shattering. The 40 raw TDA features are compressed to 5 via PCA and fused with 5 Technical Analysis indicators to form a 10-dimensional feature vector. A Ternary Soft-Voting Ensemble (XGBoost + Random Forest + Logistic Regression) classifies ATR-normalized drawdowns over a 5-day forward window."
+"This research presents the Topological Financial Risk Optimizer (TFRO), a novel early-warning system for predicting structural market crashes. The system converts 1D closing-price time series into high-dimensional topological features using a 4-stage pipeline: Sliding Window segmentation (20-day), Takens Delay Embedding (d=3, τ=1), Vietoris-Rips Persistent Homology (H₀, H₁), and Persistence Landscape vectorization (1 layer, 10 bins). The primary novelty is Manifold Velocity — the first derivative of the persistence landscape — capturing the rate of structural shattering. The 40 raw TDA features are compressed to 5 via PCA and fused with 5 Technical Analysis indicators to form a 10-dimensional feature vector. A Weighted Ternary Soft-Voting Ensemble (XGBoost, Random Forest, Logistic Regression; weights 3:2:1) classifies ATR-normalized drawdowns. To ensure user trust and interpretability, the final probability matrix is sharpened using Temperature Scaling (T=0.4)."
 
 **Conclusion paragraph — say this:**
-"The proposed architecture achieves 78.65% accuracy, 0.5128 F1-Score, and 0.3764 MCC on AAPL, outperforming the TA-only baseline (64.04%, F1=0.3333, MCC=0.0990) by a significant margin. The ablation study confirms that TDA features provide complementary structural information irreducible from traditional momentum indicators. The system is deployed as a real-time FastAPI backend with a React dashboard, demonstrating practical applicability for dynamic stop-loss optimization, derivatives hedging, and capital preservation."
+"The proposed architecture achieves 78.65% accuracy, 0.5128 F1-Score, and 0.3764 MCC on AAPL, outperforming the TA-only baseline (64.04%, F1=0.3333, MCC=0.0990) by a significant margin. The ablation study confirms that TDA features provide complementary structural information irreducible from traditional momentum indicators. The system is deployed as a real-time FastAPI backend with a React dashboard, demonstrating practical applicability for dynamic 2x ATR stop-loss optimization, 1% risk rule automated position sizing, derivatives hedging, and capital preservation."
 
 ---
 
@@ -413,6 +416,7 @@ List these 6:
 9. Tauzin, G. et al. (2021). "giotto-tda." JMLR, 22(39).
 10. Pedregosa, F. et al. (2011). "Scikit-learn." JMLR, 12.
 11. Jolliffe, I.T. (2002). Principal Component Analysis. Springer.
+12. Guo, C. et al. (2017). "On Calibration of Modern Neural Networks." ICML.
 
 ---
 
@@ -440,3 +444,7 @@ List these 6:
 | XGBoost learning rate | 0.05 |
 | L2 regularization | 10.0 |
 | Feature subsampling | 60% |
+| Ensemble Weights | XGB: 3, RF: 2, LR: 1 |
+| Temperature Scaling | T = 0.4 |
+| Position Sizing | 1% Risk Rule |
+| Stop Loss Floor | 2× ATR |

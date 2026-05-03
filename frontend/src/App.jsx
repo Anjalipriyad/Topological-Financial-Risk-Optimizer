@@ -84,6 +84,15 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const resetToHome = () => {
+    setPage('home');
+    setResult(null);
+    setError(null);
+    setChartData([]);
+    setIsRealData(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSearch = async (ticker) => {
     setIsLoading(true); setError(null); setResult(null); setChartData([]); setIsRealData(false);
     if (page !== 'home') switchPage('home');
@@ -139,14 +148,13 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <CursorGlow />
 
       {/* Scroll progress */}
       <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
 
       <div className="app-content">
         {/* Navbar */}
-        <Navbar page={page} setPage={switchPage} mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
+        <Navbar page={page} setPage={switchPage} onLogoClick={resetToHome} mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
 
         {/* Body */}
         <div style={{ display: 'flex', maxWidth: showSidebar ? 1400 : 'none', margin: '0 auto', width: '100%' }}>
@@ -260,11 +268,11 @@ export default function App() {
                             <FeatureRadar features={result.features || {}} currentPrice={result.current_price} />
                           </div>
                           <div style={{ height: 1, background: 'var(--border-subtle)' }} />
-                          <RecommendationAlert 
-                            riskLevel={result.risk_level} 
-                            recommendation={result.recommendation} 
-                            currentPrice={result.current_price} 
-                            features={result.features || {}} 
+                          <RecommendationAlert
+                            riskLevel={result.risk_level}
+                            recommendation={result.recommendation}
+                            currentPrice={result.current_price}
+                            features={result.features || {}}
                             modelConfidence={result.model_confidence_pct}
                             historicalAccuracy={result.historical_accuracy_pct}
                           />
@@ -292,7 +300,7 @@ export default function App() {
         {/* Footer */}
         <footer className="footer-glass" style={{ borderTop: '1px solid var(--border-subtle)', padding: '24px 0', marginTop: 'auto' }}>
           <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Made for Technovation 5.0</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Topological Financial Risk Optimizer</span>
           </div>
         </footer>
       </div>

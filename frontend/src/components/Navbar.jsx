@@ -6,7 +6,7 @@ import MagneticButton from './MagneticButton';
  * Scroll-aware: strengthens glass tint after scrolling 50px.
  * Logo navigates to Home. Animated gold underline on active tab.
  */
-export default function Navbar({ page, setPage, mobileSidebarOpen, setMobileSidebarOpen }) {
+export default function Navbar({ page, setPage, onLogoClick, mobileSidebarOpen, setMobileSidebarOpen }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -43,7 +43,10 @@ export default function Navbar({ page, setPage, mobileSidebarOpen, setMobileSide
 
         {/* Logo */}
         <button
-          onClick={() => setPage('home')}
+          onClick={() => {
+            if (onLogoClick) onLogoClick();
+            else setPage('home');
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
