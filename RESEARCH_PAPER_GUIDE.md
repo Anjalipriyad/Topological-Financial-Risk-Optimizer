@@ -62,6 +62,7 @@ List these 6:
 5. Implement a Dual-Mode Architecture (Production vs Research)
 5. Build a real-time per-ticker dynamic training pipeline via FastAPI
 6. Validate via ablation study (TA-only vs TDA-only vs Full)
+7. Address the **Interpretability Paradox** via a Retail Translator Layer (3D Flip-Cards & CLI)
 
 ---
 
@@ -381,6 +382,8 @@ List these 6:
 
 7. The dual-mode architecture (Production Safe-Weighting vs Research SMOTE) resolves the tradeoff between user-facing dashboard stability and academic signal sensitivity.
 
+8. The **Interpretability Paradox** of TDA is successfully mitigated through UX Engineering: the use of 3D Flip-Cards and a CLI-based 'Retail Translator' converts abstract topological homologies into actionable, beginner-friendly advice.
+
 ---
 
 ## Chapter 7: Summary & Conclusion
@@ -461,3 +464,4 @@ List these 6:
 | Temperature Scaling | T = 0.4 |
 | Position Sizing | 1% Risk Rule |
 | Stop Loss Floor | 2× ATR |
+| UX Accessibility | 3D Flip-Cards & CLI 'Retail Translator' |

@@ -20,12 +20,12 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
   const bbLabel = bbPivot != null ? (bbPivot > 0.8 ? 'Near Upper Band' : bbPivot < 0.2 ? 'Near Lower Band' : 'Mid-Band') : 'N/A';
 
   const metrics = [
-    { label:'Stop-Loss', value: stopLoss != null ? `$${stopLoss.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : 'N/A', sub:`−${stopLossPct}% · 2× ATR` },
-    { label:'ATR 14D', value: atr > 0 ? `$${atr.toFixed(2)}` : 'N/A', sub:'Avg True Range' },
-    { label:'Position Size', value: positionPct ? `${positionPct}%` : 'N/A', sub:'1% Risk Rule' },
-    { label:'BB Position', value: bbPivot != null ? `${(bbPivot*100).toFixed(1)}%` : 'N/A', sub:bbLabel },
-    { label:'Model Confidence', value: modelConfidence ? `${modelConfidence}%` : 'N/A', sub:'Ensemble Consensus' },
-    { label:'Backtest Acc.', value: historicalAccuracy ? `${historicalAccuracy}%` : 'N/A', sub:'Historical Performance' },
+    { label:'Position Size', value: positionPct ? `${positionPct}%` : 'N/A', sub:'1% Risk Rule', advice: positionPct ? `Your Spending Limit: Do not invest more than ${positionPct}% of your total savings into this single stock.` : '' },
+    { label:'Stop-Loss', value: stopLoss != null ? `$${stopLoss.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : 'N/A', sub:`−${stopLossPct}% · 2× ATR`, advice: stopLoss != null ? `Your Safety Net: Tell your broker app to automatically sell if the price drops to $${stopLoss.toFixed(2)}.` : '' },
+    { label:'BB Position', value: bbPivot != null ? `${(bbPivot*100).toFixed(1)}%` : 'N/A', sub:bbLabel, advice: 'Over 80%? Stock is too expensive right now — wait for a dip. Under 20%? It\'s on sale — good time to buy.' },
+    { label:'ATR 14D', value: atr > 0 ? `$${atr.toFixed(2)}` : 'N/A', sub:'Avg True Range', advice: atr > 0 ? `Don't Panic Meter: This stock normally wiggles $${atr.toFixed(2)} per day. Don't panic sell on normal daily drops.` : '' },
+    { label:'Model Confidence', value: modelConfidence ? `${modelConfidence}%` : 'N/A', sub:'Ensemble Consensus', advice: 'How strongly all 3 AI models agree on the current risk assessment. Higher = more reliable prediction.' },
+    { label:'Backtest Acc.', value: historicalAccuracy ? `${historicalAccuracy}%` : 'N/A', sub:'Historical Performance', advice: 'How often the AI correctly predicted risk levels when tested against 2 years of real historical data.' },
   ];
 
   return (
@@ -55,13 +55,23 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
       {/* Metric tiles */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:8 }}>
         {metrics.map(tile => (
-          <TiltCard key={tile.label} maxTilt={4} glareOpacity={0.08} scale={1.01} borderRadius={14}>
-            <div style={{ background:'white', borderRadius:14, padding:'16px 18px', border:'1px solid var(--border-subtle)' }}>
-              <p className="label-xs" style={{ marginBottom:6 }}>{tile.label}</p>
-              <p style={{ fontSize:18, fontWeight:800, color:'var(--text-primary)', fontFamily:'var(--font-mono)' }}>{tile.value}</p>
-              <p style={{ fontSize:11, color:'var(--text-muted)', marginTop:4 }}>{tile.sub}</p>
+          <div key={tile.label} className="flip-container">
+            <div className="flip-inner">
+              {/* Front Side */}
+              <div className="flip-front shadow-sm">
+                <p className="label-xs" style={{ marginBottom:6 }}>{tile.label}</p>
+                <p style={{ fontSize:18, fontWeight:800, color:'var(--text-primary)', fontFamily:'var(--font-mono)' }}>{tile.value}</p>
+                <p style={{ fontSize:11, color:'var(--text-muted)', marginTop:4 }}>{tile.sub}</p>
+              </div>
+              {/* Back Side (Advice) */}
+              <div className="flip-back shadow-md">
+                <p className="label-xs" style={{ marginBottom:10, color: 'var(--gold)' }}>Advice</p>
+                <p style={{ fontSize:12, fontWeight:600, color:'var(--text-primary)', lineHeight:1.5 }}>
+                  {tile.advice}
+                </p>
+              </div>
             </div>
-          </TiltCard>
+          </div>
         ))}
       </div>
     </div>

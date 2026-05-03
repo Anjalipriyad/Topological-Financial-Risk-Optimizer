@@ -22,10 +22,12 @@ The underlying pipeline and frontend interface have been massively upgraded, fea
 
 1. **Weighted Soft-Voting Ensemble:** We transitioned from a naive democracy to a "meritocracy" by assigning a `[3, 2, 1]` weight ratio (favoring XGBoost over Random Forest and Logistic Regression). This directly utilizes XGBoost's non-linear dominance to significantly boost backtest accuracy while preserving the ensemble's natural regularization guardrails.
 2. **Model Confidence via Temperature Scaling:** To provide the user with an actionable "Ensemble Consensus", we extract the live `predict_proba` matrix and apply a mathematical **Temperature Scaler** (`T=0.4`). This sharpens the probability output to deliver a decisive Confidence Percentage without altering the underlying target accuracy.
-3. **Automated Risk Management Engine:** The frontend now natively calculates and displays professional quant strategies:
-    * **2× ATR Stop-Loss:** Dynamically calculates trailing stop levels based on the asset's Average True Range.
-    * **1% Risk Rule Position Sizing:** Automatically mathematically deduces exactly what percentage of a portfolio should be allocated based on the ATR stop-loss to ensure total equity drawdown is capped at 1%.
-4. **Premium 6-Tile Frontend Dashboard:** A gorgeous, reactive Vite/React UI featuring real-time inference reporting, dynamic watchlists with integrated removal states, a System Console with engine telemetry, real CSV data export, and robust global ticker error handling.
+3. **Automated Risk Management Engine:** The system calculates and displays professional quant strategies with beginner-friendly "Retail Advice" translations:
+    * **2× ATR Stop-Loss:** Dynamically calculates trailing stop levels. *Retail Advice: Your Safety Net — prevents catastrophic losses.*
+    * **1% Risk Rule Position Sizing:** Automatically deduces portfolio allocation. *Retail Advice: Your Spending Limit — caps total equity risk.*
+4. **Premium 3D Dashboard & CLI:** 
+    * **3D Flip-Cards:** Metric tiles on the dashboard flip on hover to reveal actionable retail advice.
+    * **CLI Tool:** Run `python3 main.py <TICKER>` for instant terminal-based risk reporting.
 
 ---
 
@@ -101,3 +103,13 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### 5. Run the CLI Inference Tool (NEW)
+You can now run full production-grade analysis directly in your terminal without opening a browser:
+```bash
+python3 main.py TICKER  # Example: python3 main.py AAPL
+```
+The CLI provides:
+- **Live Risk Assessment:** Real-time Risk Level, Score, and Confidence.
+- **System Telemetry:** Transparent view of engine specs (Ensemble weights, T-Scaling, Takens Params).
+- **Retail Advice:** Actionable, beginner-friendly recommendations for Stop-Loss and Position Sizing.

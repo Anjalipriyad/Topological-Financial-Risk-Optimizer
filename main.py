@@ -1,6 +1,8 @@
 import os
 import sys
 # uvicorn main:app --reload
+#python3 main.py 
+#python3 main.py AAPL
 # Prevent version drift between global packages and user site-packages
 sys.path.insert(0, os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 
@@ -278,3 +280,62 @@ async def get_history(ticker: str):
             "close": round(float(row['Close']), 2),
         })
     return {"ticker": ticker.upper(), "data": history}
+
+if __name__ == "__main__":
+    import sys
+    import asyncio
+    
+    if len(sys.argv) > 1:
+        ticker_arg = sys.argv[1].replace('--', '').upper()
+        print(f"\n[ SYSTEM TELEMETRY ] Running CLI Inference Engine for: {ticker_arg}")
+        print("Initializing pipeline... (Fetching data & computing topological features)")
+        
+        try:
+            # Run the async endpoint manually
+            result = asyncio.run(predict_risk(ticker_arg))
+            
+            print("\n" + "="*60)
+            print(f" TARGET: {result.ticker} | CURRENT PRICE: ${result.current_price}")
+            print("="*60)
+            print(f" Risk Level     : {result.risk_level.upper()}")
+            print(f" Risk Score     : {result.hidden_risk_score}/100")
+            print(f" Confidence     : {result.model_confidence_pct}%")
+            print(f" Backtest Acc   : {result.historical_accuracy_pct}%")
+            print(f" Recommendation : {result.recommendation}")
+            
+            print("\n[ SYSTEM TELEMETRY ]")
+            print(" - Ensemble    : [3:2:1] XGB/RF/LR")
+            print(" - Calibration : T = 0.4 (Temperature Scaled)")
+            print(" - Topology    : Takens d=3, τ=1")
+            print(" - PCA Output  : 40 → 5 Principal Components")
+            print(" - Engine Mode : Dynamic Gradient Penalization")
+            
+            print("\n[ LATEST FEATURES ]")
+            for k, v in result.features.items():
+                print(f" - {k:<10}: {v}")
+                
+            print("\n[ RISK MANAGEMENT METRICS ]")
+            atr = result.features.get('ATR', 0)
+            sl = result.current_price - (atr * 2) if atr > 0 else 0
+            sl_pct = ((atr * 2) / result.current_price * 100) if atr > 0 else 0
+            pos_size = min(100, 1 / sl_pct * 100) if sl_pct > 0 else 0
+            bb = result.features.get('BB_Pivot', 0)
+            
+            print(f" - Position Size: {pos_size:.1f}%")
+            print(f"   > RETAIL ADVICE: Your Spending Limit. Do not invest more than {pos_size:.1f}% of your total savings into this single stock.")
+            print(f" - Stop-Loss    : ${sl:.2f} (-{sl_pct:.2f}% | 2× ATR)")
+            print(f"   > RETAIL ADVICE: Your Safety Net. Tell your broker app to automatically sell if the price drops to ${sl:.2f}.")
+            print(f" - BB Position  : {bb*100:.1f}%")
+            print(f"   > RETAIL ADVICE: Over 80%? Too expensive, wait for a dip. Under 20%? It's on sale, good time to buy.")
+            print(f" - ATR 14D      : ${atr:.2f}")
+            print(f"   > RETAIL ADVICE: The 'Don't Panic' Meter. The stock normally wiggles ${atr:.2f} a day. Don't panic sell on normal daily drops.")
+            
+            print("============================================================\n")
+            
+        except Exception as e:
+            print(f"\n[ ERROR ] Failed to analyze {ticker_arg}: {str(e)}\n")
+            
+    else:
+        print("\nStarting production backend server...")
+        import uvicorn
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
