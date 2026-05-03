@@ -26,8 +26,11 @@ warnings.filterwarnings("ignore")
 
 # ── 1. DATA AND TARGET GENERATION ──────────────────────────────────────────────
 
-def fetch_data(ticker="RELIANCE.NS", period="2y"):
-    df = yf.download(ticker, period=period, progress=False)
+def fetch_data(ticker="AAPL", period="2y", start=None, end=None):
+    if start and end:
+        df = yf.download(ticker, start=start, end=end, progress=False)
+    else:
+        df = yf.download(ticker, period=period, progress=False)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
     df.dropna(inplace=True)
@@ -179,14 +182,15 @@ def evaluate_model(X, y, classifier='xgboost', feature_names=None):
 # ── RUN PAPERS EXPERIMENTS ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ticker = "MSFT"
+    ticker = "AAPL"
     print(f"===========================================================")
     print(f" RESEARCH PAPER ANALYSIS SCRIPT : TARGET -> {ticker}")
     print(f"===========================================================\n")
     
     # 1. Fetch
     print("1. Fetching Data & Computing Targets...")
-    df_raw = fetch_data(ticker, period="2y")
+    # Pin to fixed date range to ensure reproducible results for the paper
+    df_raw = fetch_data(ticker, start="2024-04-22", end="2026-04-22")
     df = generate_targets_and_ta(df_raw)
     
     # 2. Extract Baseline
