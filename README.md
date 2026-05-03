@@ -93,7 +93,7 @@ python3 paper_analysis.py
 ### 3. Run the Live Backend Engine
 To spin up the localized FastAPI server on port 8000:
 ```bash
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload or python3 main.py
 ```
 
 ### 4. Run the Client Dashboard
