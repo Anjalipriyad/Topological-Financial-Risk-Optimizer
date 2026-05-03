@@ -112,7 +112,7 @@ List these 6:
 1. Data Collection — yfinance (primary) + tvDatafeed (fallback for Indian stocks)
 2. Feature Engineering — 5 TA features + 40 TDA features → PCA to 5 → fused 10D vector
 3. Target Generation — adaptive ATR-based drawdown labeling
-4. Model Training — chronological 80/20 split, SMOTE, Soft-Voting Ensemble
+4. Model Training — chronological 80/20 split, Dual-Mode Imbalance Handling, Soft-Voting Ensemble
 5. Deployment — FastAPI backend + React/Vite frontend
 
 ### 4.2 Data Collection and Analysis
@@ -232,15 +232,28 @@ List these 6:
 - Balances classes to 1:1
 - scale_pos_weight set to 1.0 (no double-counting)
 
-**Step 11 — Ensemble Training:**
+**Step 11 — Ensemble Training (Research Mode):**
 
 | Component | Algorithm | Role | Key Hyperparameters |
 |---|---|---|---|
-| XGBoost | Gradient Boosting | Captures non-linear TDA patterns | Weight=3, n_estimators=100, max_depth=4, lr=0.05 |
+| XGBoost | Gradient Boosting | Captures non-linear TDA patterns | n_estimators=100, max_depth=4, lr=0.05, reg_lambda=10.0, colsample_bytree=0.6 |
+| Random Forest | Bagging | Variance reduction | n_estimators=100, max_depth=4 |
+| Logistic Regression | Linear | Linear anchor/baseline | class_weight='balanced', max_iter=1000 |
+| **VotingClassifier** | **Soft voting** | **Averages probabilities equally** | voting='soft' |
+
+> **Note:** In Research Mode, SMOTE already balances classes to 1:1. Therefore we do NOT add `weights` or `class_weight='balanced'` to RF — doing so would double-count the imbalance correction and degrade accuracy.
+
+**Step 11b — Ensemble Training (Production Mode — `main.py` only):**
+
+| Component | Algorithm | Role | Key Hyperparameters |
+|---|---|---|---|
+| XGBoost | Gradient Boosting | Captures non-linear TDA patterns | Weight=3, n_estimators=100, max_depth=4, reg_lambda=10.0 |
 | Random Forest | Bagging | Variance reduction | Weight=2, n_estimators=100, max_depth=4, class_weight='balanced' |
 | Logistic Regression | Linear | Linear anchor/baseline | Weight=1, class_weight='balanced', max_iter=1000 |
-| **VotingClassifier** | **Weighted Soft voting** | **Averages probabilities by merit** | voting='soft', weights=[3, 2, 1] |
+| **VotingClassifier** | **Weighted Soft voting** | **Favors XGBoost** | voting='soft', weights=[3, 2, 1] |
 | **Calibration** | **Temperature Scaling** | **Sharpens output for UX** | T = 0.4 |
+
+> **Note:** In Production Mode, there is no SMOTE. Instead, `scale_pos_weight = √(pos_ratio)` penalizes missed crashes. The `weights=[3, 2, 1]` and `class_weight='balanced'` are safe here because no synthetic data exists to double-count.
 
 ### 5.3 Analysis and Interpretation
 
@@ -373,7 +386,7 @@ List these 6:
 ## Chapter 7: Summary & Conclusion
 
 **Summary paragraph — say this:**
-"This research presents the Topological Financial Risk Optimizer (TFRO), a novel early-warning system for predicting structural market crashes. The system converts 1D closing-price time series into high-dimensional topological features using a 4-stage pipeline: Sliding Window segmentation (20-day), Takens Delay Embedding (d=3, τ=1), Vietoris-Rips Persistent Homology (H₀, H₁), and Persistence Landscape vectorization (1 layer, 10 bins). The primary novelty is Manifold Velocity — the first derivative of the persistence landscape — capturing the rate of structural shattering. The 40 raw TDA features are compressed to 5 via PCA and fused with 5 Technical Analysis indicators to form a 10-dimensional feature vector. A Weighted Ternary Soft-Voting Ensemble (XGBoost, Random Forest, Logistic Regression; weights 3:2:1) classifies ATR-normalized drawdowns. To ensure user trust and interpretability, the final probability matrix is sharpened using Temperature Scaling (T=0.4)."
+"This research presents the Topological Financial Risk Optimizer (TFRO), a novel early-warning system for predicting structural market crashes. The system converts 1D closing-price time series into high-dimensional topological features using a 4-stage pipeline: Sliding Window segmentation (20-day), Takens Delay Embedding (d=3, τ=1), Vietoris-Rips Persistent Homology (H₀, H₁), and Persistence Landscape vectorization (1 layer, 10 bins). The primary novelty is Manifold Velocity — the first derivative of the persistence landscape — capturing the rate of structural shattering. The 40 raw TDA features are compressed to 5 via PCA and fused with 5 Technical Analysis indicators to form a 10-dimensional feature vector. A Ternary Soft-Voting Ensemble (XGBoost + Random Forest + Logistic Regression) classifies ATR-normalized drawdowns. The system implements a Dual-Mode Architecture: the Research Mode uses SMOTE resampling with equal-weight voting for academic validation (78.65% accuracy, F1=0.5128), while the Production Mode uses Gradient Penalization with Weighted Voting (3:2:1) and Temperature Scaling (T=0.4) for live dashboard inference (~77.5% backtest accuracy)."
 
 **Conclusion paragraph — say this:**
 "The proposed architecture achieves 78.65% accuracy, 0.5128 F1-Score, and 0.3764 MCC on AAPL, outperforming the TA-only baseline (64.04%, F1=0.3333, MCC=0.0990) by a significant margin. The ablation study confirms that TDA features provide complementary structural information irreducible from traditional momentum indicators. The system is deployed as a real-time FastAPI backend with a React dashboard, demonstrating practical applicability for dynamic 2x ATR stop-loss optimization, 1% risk rule automated position sizing, derivatives hedging, and capital preservation."

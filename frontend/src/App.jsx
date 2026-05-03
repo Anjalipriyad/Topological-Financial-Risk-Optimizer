@@ -64,6 +64,7 @@ export default function App() {
   const [watchlist, setWatchlist] = useState(() => loadFromStorage('tfro_watchlist', []));
   const [predHistory, setPredHistory] = useState(() => loadFromStorage('tfro_history', []));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // Scroll progress
@@ -154,7 +155,7 @@ export default function App() {
 
       <div className="app-content">
         {/* Navbar */}
-        <Navbar page={page} setPage={switchPage} onLogoClick={resetToHome} mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
+        <Navbar page={page} setPage={switchPage} onLogoClick={resetToHome} mobileSidebarOpen={toolsPanelOpen} setMobileSidebarOpen={setToolsPanelOpen} />
 
         {/* Body */}
         <div style={{ display: 'flex', maxWidth: showSidebar ? 1400 : 'none', margin: '0 auto', width: '100%' }}>
@@ -186,6 +187,109 @@ export default function App() {
                 ))}
               </div>
             </aside>
+          )}
+
+          {/* Tools Panel — slides in from right when hamburger is clicked */}
+          {toolsPanelOpen && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setToolsPanelOpen(false)}>
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }} />
+              <div onClick={e => e.stopPropagation()} style={{
+                position: 'absolute', right: 0, top: 0, bottom: 0, width: 320,
+                background: 'var(--bg-base)', borderLeft: '1px solid var(--border-subtle)',
+                boxShadow: '-8px 0 30px rgba(0,0,0,0.1)', padding: 24, overflowY: 'auto',
+                animation: 'slide-in-left 0.3s var(--ease-out) both',
+                display: 'flex', flexDirection: 'column', gap: 24
+              }}>
+                {/* Close button */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="label-sm">System Console</span>
+                  <button onClick={() => setToolsPanelOpen(false)} style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <svg width="14" height="14" fill="none" stroke="var(--text-primary)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+
+                {/* Engine Telemetry */}
+                <div style={{ padding: '20px', background: '#1A1A2E', borderRadius: 14, color: 'var(--text-inverse)', fontFamily: 'var(--font-mono)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <div className="animate-glow-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--status-safe)', boxShadow: '0 0 8px var(--status-safe)' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em' }}>SYSTEM TELEMETRY</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 11, color: '#8A8AA0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Ensemble</span>
+                      <span style={{ color: '#E8C547' }}>[3:2:1] XGB/RF/LR</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Calibration</span>
+                      <span style={{ color: '#60A5FA' }}>T = 0.4</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Topology</span>
+                      <span style={{ color: '#E8C547' }}>Takens d=3, τ=1</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>PCA Compression</span>
+                      <span style={{ color: '#059669' }}>40 → 5 dims</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Target Window</span>
+                      <span style={{ color: '#60A5FA' }}>5-day fwd</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>ATR Multiplier</span>
+                      <span style={{ color: '#E8C547' }}>1.5×</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Export */}
+                <div>
+                  <span className="label-xs" style={{ display: 'block', marginBottom: 12 }}>Data Export</span>
+                  <button className="btn-glass" style={{ width: '100%', justifyContent: 'flex-start', fontSize: 12, padding: '10px 14px', opacity: result ? 1 : 0.4, pointerEvents: result ? 'auto' : 'none' }} onClick={() => {
+                    if (!result) return;
+                    const rows = [
+                      ['Field', 'Value'],
+                      ['Ticker', result.ticker],
+                      ['Current Price', result.current_price],
+                      ['Risk Score', result.hidden_risk_score],
+                      ['Risk Level', result.risk_level],
+                      ['Backtest Accuracy (%)', result.historical_accuracy_pct],
+                      ['Model Confidence (%)', result.model_confidence_pct],
+                      ['RSI', result.features?.RSI],
+                      ['MACD', result.features?.MACD],
+                      ['BB_Width', result.features?.BB_Width],
+                      ['BB_Pivot', result.features?.BB_Pivot],
+                      ['ATR', result.features?.ATR],
+                      ['Recommendation', result.recommendation],
+                    ];
+                    const csv = rows.map(r => r.join(',')).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${result.ticker}_risk_report.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
+                    <span style={{ color: 'var(--blue)' }}>↓</span> Export Risk Report (CSV)
+                  </button>
+                  {!result && <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8 }}>Search a ticker first to enable export.</p>}
+                </div>
+
+                {/* Navigation */}
+                <div>
+                  <span className="label-xs" style={{ display: 'block', marginBottom: 12 }}>Navigation</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {[{ id: 'home', label: 'Dashboard', icon: '◈' }, { id: 'research', label: 'Research', icon: '∂' }].map(({ id, label, icon }) => (
+                      <button key={id} onClick={() => { switchPage(id); setToolsPanelOpen(false); }}
+                        style={{ textAlign: 'left', padding: '10px 14px', fontSize: 13, fontWeight: page === id ? 700 : 500, color: page === id ? 'var(--text-primary)' : 'var(--text-secondary)', background: page === id ? 'var(--gold-bg)' : 'transparent', border: page === id ? '1px solid var(--gold-border)' : '1px solid transparent', borderRadius: 10, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center', transition: 'all 0.2s' }}>
+                        <span style={{ fontSize: 11 }}>{icon}</span> {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Main */}

@@ -37,22 +37,39 @@ The repository features a rigorous academic ablation suite designed for peer-rev
 TDA extraction natively generates $40+$ persistent features. When applied to 2-year datasets (~500 rows), this causes standard algorithms to overfit. 
 * **The Fix:** The pipeline implements **Principal Component Analysis (PCA)** to rigorously compress the 40+ TDA non-Euclidean artifacts down to $5$ principal components. 
 
-### Performance on Single Assets (e.g., AAPL)
-Using the highly volatile structural regime of individual tech stocks over exactly 2 years:
+### Research Validation Results (AAPL, `paper_analysis.py`)
+Using SMOTE-resampled research mode on a pinned 2-year dataset:
 
 | Model | Accuracy | F1-Score | MCC |
 | :--- | :--- | :--- | :--- |
-| **Baseline (MACD, RSI, ATR Only)** | 67.42% | 0.3830 | 0.1717 |
-| **XGBoost (Standalone TDA+TA)** | 70.79% | 0.2778 | 0.0985 |
-| **Weighted Ensemble (Proposed Architecture)** | **75.28%+** | **0.4500** | **0.2906** |
+| **Baseline (RSI, MACD, ATR Only)** | 64.04% | 0.3333 | 0.0990 |
+| **XGBoost (Standalone TDA+TA)** | 74.16% | 0.2581 | 0.1250 |
+| **Ensemble (Proposed Architecture)** | **78.65%** | **0.5128** | **0.3764** |
+
+### Live Dashboard Accuracy (`main.py`)
+Using Gradient Penalization production mode on a rolling 2-year window:
+- **Backtest Accuracy:** ~77.5% (dynamically computed per-ticker)
+- **Model Confidence:** Temperature-scaled (`T=0.4`) for decisive UX display
 
 ---
 
-## 4. Handling the "Majority Class Trap"
+## 4. Dual-Mode Architecture & Class Imbalance
 
-Crashes are statistically rare events. A model optimizing purely for Accuracy will blindly guess "No Crash" 95% of the time. This backend natively patches this data-leakage via:
-* **Log-Loss Penalization (`scale_pos_weight`):** Dynamically tracking the ratio of stable days to crashing days. We inject $\sqrt{\text{pos\_ratio}}$ into the XGBoost cost-function framework to heavily penalize false negatives without destroying precision.
-* **Non-Synthetic Scaling:** We deliberately abandoned Euclidean SMOTE oversampling for the final architecture, because synthesizing points via purely Euclidean K-Nearest Neighbors mathematics actively destroys the topological geometries unique to TDA structures. 
+Crashes are statistically rare events (~3–15% of days). This project implements a **Dual-Mode Architecture** to handle the tradeoff between user-facing stability and academic signal sensitivity:
+
+### Production Mode (`main.py` → Live Dashboard)
+* Uses **Gradient Penalization** (`scale_pos_weight = √(pos_ratio)`) on 100% real market data.
+* Uses **Weighted Soft-Voting** (`weights=[3, 2, 1]`) to mathematically favor XGBoost.
+* Optimized for **raw accuracy and user trust** — no synthetic data, no false alarms.
+* Result: **~77.5% Backtest Accuracy** on live AAPL.
+
+### Research Mode (`paper_analysis.py` → Paper Validation)
+* Uses **SMOTE Resampling** to synthetically balance crash vs. non-crash classes to 1:1.
+* Uses **Equal-Weight Soft-Voting** (no `weights`) to prevent double-counting with SMOTE.
+* Optimized for **Recall and F1** — proving TDA features catch real crashes.
+* Result: **78.65% Accuracy, 0.5128 F1, 0.3764 MCC** on pinned AAPL dataset.
+
+**Why both exist:** The production engine prioritizes not crying "Wolf" every day (high accuracy). The research engine prioritizes proving the TDA signal is real (high recall). Different goals require different imbalance strategies.
 
 ---
 
