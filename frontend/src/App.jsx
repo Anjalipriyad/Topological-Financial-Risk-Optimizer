@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
+import HeroSection from './components/HeroSection';
 import SearchBar from './components/SearchBar';
 import PriceChart from './components/PriceChart';
 import RiskGauge from './components/RiskGauge';
@@ -7,10 +9,12 @@ import LoadingOverlay from './components/LoadingOverlay';
 import FeatureRadar from './components/FeatureRadar';
 import { WatchlistPanel, HistoryPanel } from './components/Watchlist';
 import ResearchPage from './components/ResearchPage';
+import CursorGlow from './components/CursorGlow';
+import ScrollReveal from './components/ScrollReveal';
 import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-const HEADER_H = 58;
+const HEADER_H = 64;
 
 function generateMockPriceData(currentPrice, days = 60) {
   const data = [];
@@ -26,8 +30,7 @@ function generateMockPriceData(currentPrice, days = 60) {
     price = Math.max(price, currentPrice * 0.85);
     const c = parseFloat(price.toFixed(2));
     data.push({
-      date: label,
-      close: c,
+      date: label, close: c,
       open: parseFloat((c * (1 - Math.random() * 0.004)).toFixed(2)),
       high: parseFloat((c * (1 + Math.random() * 0.007)).toFixed(2)),
       low: parseFloat((c * (1 - Math.random() * 0.007)).toFixed(2)),
@@ -42,17 +45,17 @@ function loadFromStorage(key, fallback) {
   catch { return fallback; }
 }
 
-/* Maps risk level string → institutional color */
 function riskColor(level) {
   if (!level) return 'var(--text-muted)';
   const l = level.toLowerCase();
-  if (l.includes('high'))   return 'var(--accent-neon-orange)';   /* crimson */
-  if (l.includes('medium')) return 'var(--accent-neon-yellow)';   /* gold */
-  return 'var(--accent-neon-green)';                              /* deep green */
+  if (l.includes('high')) return 'var(--status-danger)';
+  if (l.includes('medium')) return 'var(--gold)';
+  return 'var(--status-safe)';
 }
 
 export default function App() {
   const [page, setPage] = useState('home');
+  const [pageKey, setPageKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
@@ -61,13 +64,29 @@ export default function App() {
   const [watchlist, setWatchlist] = useState(() => loadFromStorage('tfro_watchlist', []));
   const [predHistory, setPredHistory] = useState(() => loadFromStorage('tfro_history', []));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Scroll progress
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(h > 0 ? (window.scrollY / h) * 100 : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Page transition
+  const switchPage = (p) => {
+    if (p === page) return;
+    setPage(p);
+    setPageKey(k => k + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSearch = async (ticker) => {
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-    setChartData([]);
-    setIsRealData(false);
+    setIsLoading(true); setError(null); setResult(null); setChartData([]); setIsRealData(false);
+    if (page !== 'home') switchPage('home');
     try {
       const [predRes, histRes] = await Promise.all([
         fetch(`${API_BASE}/predict/${encodeURIComponent(ticker)}`),
@@ -82,18 +101,9 @@ export default function App() {
         histRes.ok ? histRes.json() : Promise.resolve(null),
       ]);
       setResult(data);
-      if (histData?.data?.length > 5) {
-        setChartData(histData.data);
-        setIsRealData(true);
-      } else {
-        setChartData(generateMockPriceData(data.current_price));
-        setIsRealData(false);
-      }
-      const entry = {
-        ticker: data.ticker, score: data.hidden_risk_score,
-        riskLevel: data.risk_level, price: data.current_price,
-        timestamp: new Date().toISOString(),
-      };
+      if (histData?.data?.length > 5) { setChartData(histData.data); setIsRealData(true); }
+      else { setChartData(generateMockPriceData(data.current_price)); setIsRealData(false); }
+      const entry = { ticker: data.ticker, score: data.hidden_risk_score, riskLevel: data.risk_level, price: data.current_price, timestamp: new Date().toISOString() };
       setPredHistory(prev => {
         const updated = [entry, ...prev.filter(h => h.ticker !== data.ticker)].slice(0, 10);
         localStorage.setItem('tfro_history', JSON.stringify(updated));
@@ -101,9 +111,7 @@ export default function App() {
       });
     } catch (err) {
       setError(err.message || 'Failed to connect to the analysis server.');
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const addToWatchlist = () => {
@@ -126,364 +134,169 @@ export default function App() {
 
   const isInWatchlist = result && watchlist.some(w => w.ticker === result.ticker);
 
-  /* ── Shared border style ──────────────────────────────────────────────── */
-  const navyBorder = { borderColor: 'var(--border-accent)' };
+  // Show sidebar only when dashboard has results/loading/error (not on hero or research)
+  const showSidebar = page === 'home' && (result || isLoading || error);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)', fontFamily: '"Times New Roman", Times, serif' }}>
+    <div className="app-shell">
+      <CursorGlow />
 
-      {/* ════════════════════════════════════════════════════════════
-          HEADER — ivory, 1px navy bottom rule
-          ════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 glass-noir" style={{ height: HEADER_H }}>
-        <div className="h-full max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-4">
+      {/* Scroll progress */}
+      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
 
-          {/* Logo wordmark */}
-          <div className="flex items-center gap-3 flex-shrink-0 select-none">
-            <div
-              className="w-7 h-7 border flex items-center justify-center flex-shrink-0"
-              style={{ borderColor: 'var(--border-navy)', background: 'var(--bg-primary)' }}
-            >
-              <span style={{ color: 'var(--text-primary)', fontSize: 11, fontWeight: 900, letterSpacing: '-0.04em', fontFamily: '"Times New Roman", Times, serif' }}>
-                TF
-              </span>
-            </div>
-            <div>
-              <h1
-                className="uppercase leading-none"
-                style={{ fontSize: 13, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '0.08em', fontFamily: '"Times New Roman", Times, serif' }}
-              >
-                TFRO
-              </h1>
-              <p className="label-xs" style={{ marginTop: 1 }}>Risk Optimizer</p>
-            </div>
-          </div>
+      <div className="app-content">
+        {/* Navbar */}
+        <Navbar page={page} setPage={switchPage} mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
 
-          {/* Tab navigation */}
-          <nav className="hidden sm:flex items-center border" style={navyBorder}>
-            {[
-              { id: 'home', label: 'Dashboard' },
-              { id: 'research', label: 'Research' },
-            ].map(({ id, label }, i, arr) => (
-              <button
-                key={id}
-                onClick={() => setPage(id)}
-                style={{
-                  padding: '6px 20px',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  fontFamily: '"Times New Roman", Times, serif',
-                  background: page === id ? 'var(--accent-gold)' : 'transparent',
-                  color: page === id ? '#FDFBF7' : 'var(--text-secondary)',
-                  borderRight: i < arr.length - 1 ? '1px solid var(--border-accent)' : 'none',
-                  transition: 'background 0.15s ease, color 0.15s ease',
-                  cursor: 'pointer',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-4">
-            {/* Live indicator */}
-            <div className="hidden sm:flex items-center gap-2">
-              <div
-                className="w-1.5 h-1.5 animate-neon-pulse"
-                style={{ background: 'var(--accent-gold)', borderRadius: '50%' }}
-              />
-              <span className="label-xs" style={{ color: 'var(--accent-gold)', letterSpacing: '0.22em' }}>
-                Engine Live
-              </span>
-            </div>
-            {/* Mobile menu toggle */}
-            <button
-              className="lg:hidden p-2 border transition-colors"
-              style={navyBorder}
-              onClick={() => setMobileSidebarOpen(v => !v)}
-              aria-label="Toggle sidebar"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-primary)' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ════════════════════════════════════════════════════════════
-          BODY
-          ════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-1 max-w-[1400px] mx-auto w-full">
-
-        {/* Mobile overlay */}
-        {mobileSidebarOpen && (
-          <div
-            className="fixed inset-0 z-30 lg:hidden"
-            style={{ background: 'rgba(11,29,58,0.35)' }}
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-        )}
-
-        {/* ── Sidebar ────────────────────────────────────────────────── */}
-        <aside
-          className={`
-            flex-col w-56 flex-shrink-0 border-r p-5
-            sticky overflow-y-auto
-            lg:flex
-            ${mobileSidebarOpen ? 'flex fixed z-40 w-64 shadow-xl' : 'hidden'}
-          `}
-          style={{
-            top: HEADER_H,
-            height: `calc(100vh - ${HEADER_H}px)`,
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
+        {/* Body */}
+        <div style={{ display:'flex', maxWidth: showSidebar ? 1400 : 'none', margin:'0 auto', width:'100%' }}>
+          {/* Mobile overlay */}
           {mobileSidebarOpen && (
-            <button
-              className="self-end mb-4"
-              style={{ color: 'var(--text-muted)' }}
-              onClick={() => setMobileSidebarOpen(false)}
-              aria-label="Close sidebar"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="mobile-overlay lg:hidden" onClick={() => setMobileSidebarOpen(false)} />
           )}
 
-          <WatchlistPanel
-            watchlist={watchlist}
-            onSelect={(t) => { handleSearch(t); setMobileSidebarOpen(false); }}
-            onRemove={removeFromWatchlist}
-          />
-          <HistoryPanel
-            history={predHistory}
-            onSelect={(t) => { handleSearch(t); setMobileSidebarOpen(false); }}
-          />
-
-          {/* Mobile nav links */}
-          <div className="sm:hidden mt-auto pt-4 border-t flex flex-col gap-0.5" style={{ borderColor: 'var(--border-subtle)' }}>
-            {[{ id: 'home', label: 'Dashboard' }, { id: 'research', label: 'Research' }].map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => { setPage(id); setMobileSidebarOpen(false); }}
-                style={{
-                  textAlign: 'left', padding: '8px 10px',
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase',
-                  fontFamily: '"Times New Roman", Times, serif',
-                  color: page === id ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  background: page === id ? 'var(--bg-surface)' : 'transparent',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* ── Main Panel ─────────────────────────────────────────────── */}
-        <main className="flex-1 min-w-0 px-6 lg:px-10 py-10">
-
-          {/* ── Dashboard ──────────────────────────────────────────── */}
-          {page === 'home' && (
-            <div className="flex flex-col gap-10">
-
-              <section className="flex flex-col items-center">
-                <SearchBar onSearch={handleSearch} isLoading={isLoading} />
-              </section>
-
-              {/* Error banner */}
-              {error && (
-                <div
-                  className="border p-4 text-center animate-fade-in-up"
-                  style={{ borderColor: 'var(--accent-neon-orange)', background: 'rgba(122,21,21,0.05)' }}
-                >
-                  <p style={{ fontSize: 13, color: 'var(--accent-neon-orange)', fontFamily: '"Times New Roman", Times, serif' }}>
-                    {error}
-                  </p>
-                </div>
+          {/* Sidebar — only shown when dashboard has content */}
+          {showSidebar && (
+            <aside className={`${mobileSidebarOpen ? 'flex fixed z-40 w-72 shadow-xl' : 'hidden'} lg:flex sidebar-glass`}
+              style={{ flexDirection:'column', width: mobileSidebarOpen ? 288 : 224, flexShrink:0, borderRight:'1px solid var(--border-subtle)', padding:20,
+                position: mobileSidebarOpen ? 'fixed' : 'sticky', top:HEADER_H, height:`calc(100vh - ${HEADER_H}px)`, overflowY:'auto', zIndex: mobileSidebarOpen ? 40 : 'auto' }}>
+              {mobileSidebarOpen && (
+                <button style={{ alignSelf:'flex-end', marginBottom:12, width:32, height:32, borderRadius:8, background:'var(--bg-surface)', border:'1px solid var(--border-subtle)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}
+                  onClick={() => setMobileSidebarOpen(false)} aria-label="Close sidebar">
+                  <svg width="14" height="14" fill="none" stroke="var(--text-primary)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
               )}
-
-              {isLoading && <LoadingOverlay />}
-
-              {/* ── Results ────────────────────────────────────────── */}
-              {result && !isLoading && (
-                <div className="flex flex-col gap-7 animate-fade-in-up">
-
-                  {/* Ticker header row */}
-                  <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <div className="flex items-center gap-4">
-                      <h2
-                        className="uppercase"
-                        style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '0.04em', fontFamily: '"Times New Roman", Times, serif' }}
-                      >
-                        {result.ticker}
-                      </h2>
-                      <span
-                        className="border"
-                        style={{
-                          fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase',
-                          padding: '3px 10px', fontFamily: '"Times New Roman", Times, serif',
-                          color: riskColor(result.risk_level),
-                          borderColor: riskColor(result.risk_level),
-                        }}
-                      >
-                        {result.risk_level} Risk
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-5">
-                      <div className="hidden sm:block text-right">
-                        <p className="label-xs">Model Certainty</p>
-                        <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', fontFamily: '"Times New Roman", Times, serif', marginTop: 2 }}>
-                          {result.historical_accuracy_pct}
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 1 }}>%</span>
-                        </p>
-                      </div>
-
-                      {/* Watch button */}
-                      <button
-                        onClick={addToWatchlist}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6,
-                          padding: '7px 16px',
-                          border: `1px solid ${isInWatchlist ? 'var(--accent-gold)' : 'var(--border-accent)'}`,
-                          background: isInWatchlist ? 'var(--accent-gold-bg)' : 'transparent',
-                          color: isInWatchlist ? 'var(--accent-gold)' : 'var(--text-secondary)',
-                          fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase',
-                          fontFamily: '"Times New Roman", Times, serif',
-                          cursor: 'pointer', transition: 'all 0.15s ease',
-                        }}
-                      >
-                        {isInWatchlist ? '✓ Watching' : '+ Watch'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Price chart */}
-                  <PriceChart data={chartData} ticker={result.ticker} isRealData={isRealData} />
-
-                  {/* System Inference block */}
-                  <div className="card-noir">
-                    {/* Section header */}
-                    <div
-                      className="px-8 py-4 border-b flex items-center justify-between"
-                      style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-surface)' }}
-                    >
-                      <div>
-                        <h2
-                          className="uppercase"
-                          style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.22em', color: 'var(--text-primary)', fontFamily: '"Times New Roman", Times, serif' }}
-                        >
-                          System Inference
-                        </h2>
-                        <p className="label-xs" style={{ marginTop: 3 }}>
-                          Topological Manifold Analysis · {result.ticker}
-                        </p>
-                      </div>
-                      <div className="sm:hidden text-right">
-                        <p className="label-xs">Certainty</p>
-                        <p style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', fontFamily: '"Times New Roman", Times, serif', marginTop: 2 }}>
-                          {result.historical_accuracy_pct}<span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 1 }}>%</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-8 md:p-10 flex flex-col gap-10">
-                      {/* Gauge + Radar */}
-                      <div className="flex flex-col xl:flex-row gap-8 items-center xl:items-start">
-                        <div className="flex-shrink-0">
-                          <RiskGauge score={result.hidden_risk_score} riskLevel={result.risk_level} />
-                        </div>
-                        <div className="flex-1 w-full min-w-0">
-                          <FeatureRadar features={result.features || {}} currentPrice={result.current_price} />
-                        </div>
-                      </div>
-
-                      {/* Hairline divider */}
-                      <div style={{ height: 1, background: 'var(--border-subtle)' }} />
-
-                      {/* Recommendation */}
-                      <RecommendationAlert
-                        riskLevel={result.risk_level}
-                        recommendation={result.recommendation}
-                        currentPrice={result.current_price}
-                        features={result.features || {}}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Empty state ─────────────────────────────────────── */}
-              {!result && !isLoading && !error && (
-                <div className="flex flex-col items-center justify-center text-center py-24 animate-fade-in-up">
-                  <div
-                    className="w-12 h-12 border flex items-center justify-center mb-7"
-                    style={{ borderColor: 'var(--border-accent)', background: 'var(--bg-surface)' }}
-                  >
-                    <span style={{ fontSize: 18, color: 'var(--text-muted)', fontFamily: 'serif' }}>∂</span>
-                  </div>
-                  <h3
-                    className="uppercase mb-2"
-                    style={{ fontSize: 15, fontWeight: 900, letterSpacing: '0.12em', color: 'var(--text-primary)', fontFamily: '"Times New Roman", Times, serif' }}
-                  >
-                    Ready for Analysis
-                  </h3>
-                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 300, lineHeight: 1.7, fontFamily: '"Times New Roman", Times, serif', marginTop: 4 }}>
-                    Enter a ticker symbol to compute high-dimensional risk coefficients using Topological Data Analysis.
-                  </p>
-                  <button
-                    onClick={() => setPage('research')}
-                    style={{
-                      marginTop: 20, fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase',
-                      color: 'var(--text-muted)', fontFamily: '"Times New Roman", Times, serif',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      borderBottom: '1px solid var(--border-subtle)', paddingBottom: 1,
-                      transition: 'color 0.15s, border-color 0.15s',
-                    }}
-                    onMouseEnter={(e) => { e.target.style.color = 'var(--text-primary)'; e.target.style.borderBottomColor = 'var(--border-accent)'; }}
-                    onMouseLeave={(e) => { e.target.style.color = 'var(--text-muted)'; e.target.style.borderBottomColor = 'var(--border-subtle)'; }}
-                  >
-                    View methodology →
-                  </button>
-                </div>
-              )}
-            </div>
+              <WatchlistPanel watchlist={watchlist} onSelect={t => { handleSearch(t); setMobileSidebarOpen(false); }} onRemove={removeFromWatchlist} />
+              <HistoryPanel history={predHistory} onSelect={t => { handleSearch(t); setMobileSidebarOpen(false); }} />
+              {/* Mobile nav */}
+              <div className="sm:hidden" style={{ marginTop:'auto', paddingTop:16, borderTop:'1px solid var(--border-subtle)', display:'flex', flexDirection:'column', gap:2 }}>
+                {[{id:'home',label:'Dashboard'},{id:'research',label:'Research'}].map(({id,label})=>(
+                  <button key={id} onClick={()=>{switchPage(id);setMobileSidebarOpen(false);}}
+                    style={{ textAlign:'left', padding:'10px 12px', fontSize:12, fontWeight:page===id?700:500, color:page===id?'var(--text-primary)':'var(--text-secondary)', background:page===id?'var(--bg-surface)':'transparent', border:'none', borderRadius:8, cursor:'pointer' }}>{label}</button>
+                ))}
+              </div>
+            </aside>
           )}
 
-          {page === 'research' && <ResearchPage />}
-        </main>
-      </div>
+          {/* Main */}
+          <main key={pageKey} className="page-wrapper" style={{ flex:1, minWidth:0, padding: showSidebar ? '32px 24px 48px' : '0' }}>
+            {page === 'home' && (
+              <div style={{ display:'flex', flexDirection:'column', gap:32 }}>
+                {/* Search bar (shown when results exist) */}
+                {(result || isLoading || error) && (
+                  <section style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                    <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+                  </section>
+                )}
 
-      {/* ════════════════════════════════════════════════════════════
-          FOOTER — ivory, 1px navy top rule
-          ════════════════════════════════════════════════════════════ */}
-      <footer className="border-t py-6 mt-auto" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div className="max-w-[1400px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p
-              className="uppercase"
-              style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', color: 'var(--text-primary)', fontFamily: '"Times New Roman", Times, serif' }}
-            >
-              TFRO
-            </p>
-            <p className="label-xs" style={{ marginTop: 2 }}>© 2026 High-Fidelity Risk Labs</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            {['Giotto-TDA', 'XGBoost v2', 'FastAPI', 'React 19'].map((t, i, arr) => (
-              <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                <span className="label-xs" style={{ cursor: 'default' }}>{t}</span>
-                {i < arr.length - 1 && <span style={{ color: 'var(--border-accent)' }}>·</span>}
-              </span>
-            ))}
-          </div>
+                {/* Error */}
+                {error && (
+                  <div className="animate-shake" style={{ padding:'16px 20px', borderRadius:14, background:'var(--status-danger-bg)', border:'1px solid rgba(220,38,38,0.2)', display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:'rgba(220,38,38,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--status-danger)" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                      <p style={{ fontSize:13, fontWeight:700, color:'var(--status-danger)', marginBottom:2 }}>Analysis Failed</p>
+                      <p style={{ fontSize:12, color:'var(--text-secondary)' }}>{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {isLoading && <LoadingOverlay />}
+
+                {/* Results */}
+                {result && !isLoading && (
+                  <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+                    {/* Ticker header */}
+                    <ScrollReveal variant="fade-up">
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, paddingBottom:16, borderBottom:'1px solid var(--border-subtle)' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                          <h2 style={{ fontSize:28, fontWeight:900, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>{result.ticker}</h2>
+                          <span style={{ padding:'4px 12px', borderRadius:8, background: riskColor(result.risk_level) === 'var(--status-safe)' ? 'var(--status-safe-bg)' : riskColor(result.risk_level) === 'var(--gold)' ? 'var(--gold-bg)' : 'var(--status-danger-bg)',
+                            border:`1px solid ${riskColor(result.risk_level)}22`, fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:riskColor(result.risk_level) }}>
+                            {result.risk_level} Risk
+                          </span>
+                        </div>
+
+                          <button onClick={addToWatchlist}
+                            style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 18px', borderRadius:10,
+                              border:`1px solid ${isInWatchlist ? 'var(--gold-border)' : 'var(--border-default)'}`,
+                              background: isInWatchlist ? 'var(--gold-bg)' : 'var(--bg-glass)',
+                              color: isInWatchlist ? 'var(--gold)' : 'var(--text-secondary)',
+                              fontSize:11, fontWeight:700, letterSpacing:'0.04em', cursor:'pointer', transition:'all 0.25s' }}
+                            onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--gold-border)';e.currentTarget.style.transform='translateY(-1px)';}}
+                            onMouseLeave={e=>{e.currentTarget.style.borderColor=isInWatchlist?'var(--gold-border)':'var(--border-default)';e.currentTarget.style.transform='translateY(0)';}}>
+                            {isInWatchlist ? '✓ Watching' : '+ Watch'}
+                          </button>
+                        </div>
+                    </ScrollReveal>
+
+                    {/* Chart */}
+                    <ScrollReveal variant="fade-up" delay={100}>
+                      <PriceChart data={chartData} ticker={result.ticker} isRealData={isRealData} />
+                    </ScrollReveal>
+
+                    {/* System Inference */}
+                    <ScrollReveal variant="fade-up" delay={200}>
+                      <div className="card-premium">
+                        <div style={{ padding:'20px 24px', borderBottom:'1px solid var(--border-subtle)', background:'var(--bg-surface)', borderRadius:'20px 20px 0 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                          <div>
+                            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--text-primary)', letterSpacing:'-0.01em' }}>System Inference</h2>
+                            <p className="label-xs" style={{ marginTop:3 }}>Topological Manifold Analysis · {result.ticker}</p>
+                          </div>
+
+                        </div>
+                        <div style={{ padding:'28px 24px', display:'flex', flexDirection:'column', gap:28 }}>
+                          <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+                            <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                              <RiskGauge score={result.hidden_risk_score} riskLevel={result.risk_level} />
+                            </div>
+                            <FeatureRadar features={result.features || {}} currentPrice={result.current_price} />
+                          </div>
+                          <div style={{ height:1, background:'var(--border-subtle)' }} />
+                          <RecommendationAlert riskLevel={result.risk_level} recommendation={result.recommendation} currentPrice={result.current_price} features={result.features || {}} />
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  </div>
+                )}
+
+                {/* Hero (empty state) */}
+                {!result && !isLoading && !error && (
+                  <HeroSection onSearch={handleSearch} isLoading={isLoading} onNavigateResearch={() => switchPage('research')} />
+                )}
+              </div>
+            )}
+
+            {page === 'research' && (
+              <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 32px 48px' }}>
+                <ResearchPage />
+              </div>
+            )}
+          </main>
         </div>
-      </footer>
+
+        {/* Footer */}
+        <footer className="footer-glass" style={{ borderTop:'1px solid var(--border-subtle)', padding:'24px 0', marginTop:'auto' }}>
+          <div style={{ maxWidth:1400, margin:'0 auto', padding:'0 24px', display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:'linear-gradient(135deg, var(--gold), var(--gold-light))', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <span style={{ color:'white', fontSize:9, fontWeight:900 }}>TF</span>
+              </div>
+              <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>TFRO</span>
+              <span style={{ fontSize:12, color:'var(--text-muted)' }}>· © 2026 High-Fidelity Risk Labs</span>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', justifyContent:'center' }}>
+              {['Giotto-TDA','XGBoost v2','FastAPI','React 19'].map((t, i, arr) => (
+                <span key={t} style={{ display:'flex', alignItems:'center', gap:16 }}>
+                  <span style={{ fontSize:11, fontWeight:500, color:'var(--text-muted)' }}>{t}</span>
+                  {i < arr.length - 1 && <span style={{ color:'var(--border-default)', fontSize:8 }}>●</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
