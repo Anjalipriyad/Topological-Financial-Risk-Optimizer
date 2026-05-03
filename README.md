@@ -25,7 +25,7 @@ The underlying pipeline and frontend interface have been massively upgraded, fea
 3. **Automated Risk Management Engine:** The frontend now natively calculates and displays professional quant strategies:
     * **2× ATR Stop-Loss:** Dynamically calculates trailing stop levels based on the asset's Average True Range.
     * **1% Risk Rule Position Sizing:** Automatically mathematically deduces exactly what percentage of a portfolio should be allocated based on the ATR stop-loss to ensure total equity drawdown is capped at 1%.
-4. **Premium 6-Tile Frontend Dashboard:** A gorgeous, reactive Next.js UI featuring real-time inference reporting, dynamic watchlists with integrated removal states, and robust global ticker error handling.
+4. **Premium 6-Tile Frontend Dashboard:** A gorgeous, reactive Vite/React UI featuring real-time inference reporting, dynamic watchlists with integrated removal states, a System Console with engine telemetry, real CSV data export, and robust global ticker error handling.
 
 ---
 

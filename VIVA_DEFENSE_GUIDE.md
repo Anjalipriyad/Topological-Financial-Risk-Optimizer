@@ -1,25 +1,4 @@
-Ran command: `git add .`
-Ran command: `git commit -m"Readmd and logo reset"`
-Ran command: `git push`
-
-Showing the **Stop-Loss** and **Position Sizing** is actually the secret weapon of your project, and it ties directly into the word "Optimizer" in your title: *Topological Financial Risk **Optimizer***. 
-
-If a judge or examiner asks you, *"Why do you have a stop-loss and position sizing calculator on an AI crash-prediction dashboard?"*, here is exactly how it strengthens your project description:
-
-### 1. It Makes the Project "Actionable" (Closing the Loop)
-A basic student project just builds a model that shouts *"Crash coming!"* and stops there. That is just an alarm. 
-By including a mathematical Stop-Loss and Position Size, your project becomes a true **Optimizer**. You are telling the user: *"My AI detects a structural crash is coming. Therefore, here is the exact price you should sell at to survive it, and here is exactly how much money you should risk."* It transforms your project from an academic experiment into a finished, institutional-grade product.
-
-### 2. It Proves Your UI is Mathematically Linked to Your AI
-Remember how we set up the machine learning target in your `main.py` code? The AI is specifically trained to detect when a stock is going to drop by **1.5× its Average True Range (ATR)**. 
-By calculating and displaying the ATR Stop-Loss directly on the dashboard, you are proving to the judges that your UI isn't just generic fluff—it is directly tied to the underlying mathematics of your AI. You are explicitly showing the user the exact volatility threshold the AI is currently calculating.
-
-### 3. "Capital Preservation" is the Core Theme
-In your `RESEARCH_PAPER_GUIDE.md` and `VIVA_DEFENSE_GUIDE.md`, the core theme of your project is **Capital Preservation**. 
-In quantitative finance, no AI is 100% perfect (yours is ~75-78%). What happens when the AI is wrong? The **1% Risk Rule** acts as the ultimate safety net. It mathematically guarantees that even if the AI makes a mistake, the user will never lose more than 1% of their total account. This proves to examiners that you actually understand real-world risk management, separating your project from thousands of generic ML stock predictors.
-
-**In one sentence for your defense:**
-*"Predicting a crash is useless if you don't give the user a mathematical exit strategy. I included the ATR Stop-Loss and Position Sizing so the dashboard operates as a complete, end-to-end Risk Optimizer, not just a predictive alarm."*# Viva Defense & Project Master Guide
+# Viva Defense & Project Master Guide
 > **Topological Financial Risk Optimizer (TFRO) | Examiner Rebuttal Cheat-Sheet**
 
 This document serves as your ultimate defense guide. If an examiner questions your methodology, your accuracy metrics, or the utility of the project, use the exact mathematical rebuttals listed below.
@@ -32,7 +11,7 @@ Pillar 1: The Core Innovation (TDA)
 "Most models look at price as a linear signal. I look at it as a Manifold."
 
 The Problem: Financial markets are non-linear and "noisy." Standard indicators (RSI, moving averages) lag behind the market.
-The Solution: I use Topological Data Analysis (TDA). I take a 30-day "window" of price action and project it into a high-dimensional space using Takens Embedding.
+The Solution: I use Topological Data Analysis (TDA). I take a 20-day "window" of price action and project it into a high-dimensional space using Takens Embedding.
 The Signal: I calculate Persistent Landscapes. When the "holes" in this mathematical shape start to shatter or collapse, it indicates a structural loss of liquidity—the "Smoking Gun" of an imminent crash—long before the price actually drops.
 Pillar 2: Feature Engineering & PCA
 "I solved the 'Curse of Dimensionality' with non-Euclidean compression."
@@ -61,7 +40,7 @@ Pillar 5: The "Stability Paradox"
 
 If they ask why MSFT has 60% accuracy: "Microsoft is so stable it has almost no history of shattering. Our model uses a 5.8x penalty on misses, meaning it would rather alert the user to a minor ripple than miss a 1-in-a-100 day crash. In risk management, catching the crash is more valuable than being 'right' on a quiet Friday."
 The Final "One-Sentence" Pitch:
-"My project uses Topological Data Analysis to detect the structural transition from stability to collapse, then uses a PCA-compressed Ensemble to translate that mathematical shattering into actionable risk scores with a peak 75.28% accuracy."
+"My project uses Topological Data Analysis to detect the structural transition from stability to collapse, then uses a PCA-compressed Ensemble to translate that mathematical shattering into actionable risk scores with a peak 78.65% accuracy."
 
 Pro Tip: If they ask "Why not use LSTM?", respond: "LSTMs are hungry for thousands of data points. In financial markets, regimes change every 2 years. By using TDA and an Ensemble on a 2-year micro-window, I avoid the 'Macro-Drift' that breaks most Deep Learning models." 🏁🎓🚀助
 
@@ -69,7 +48,7 @@ Pro Tip: If they ask "Why not use LSTM?", respond: "LSTMs are hungry for thousan
 
 ## 1. What is this project and what does it do?
 **The Pitch:** 
-"This project is an advanced **Early Warning System for structural market crashes**. It continuously monitors financial data and predicts when an asset is mathematically about to suffer a catastrophic drawdown. It achieves this by combining traditional technical momentum indicators with **Topological Data Analysis (TDA)**—a branch of abstract mathematics that maps the 'shape' of market data. The final prediction is driven by a **Ternary Soft-Voting Ensemble** (XGBoost, Random Forest, and Logistic Regression) which achieves a validated accuracy of **75.28%** for high-risk assets like AAPL."
+"This project is an advanced **Early Warning System for structural market crashes**. It continuously monitors financial data and predicts when an asset is mathematically about to suffer a catastrophic drawdown. It achieves this by combining traditional technical momentum indicators with **Topological Data Analysis (TDA)**—a branch of abstract mathematics that maps the 'shape' of market data. The final prediction is driven by a **Ternary Soft-Voting Ensemble** (XGBoost, Random Forest, and Logistic Regression) which achieves a validated accuracy of **78.65%** for high-risk assets like AAPL."
 
 ---
 
@@ -97,10 +76,10 @@ If an examiner asks, *"Okay, it successfully predicts structural crashes... how 
 
 Here is how you answer the toughest questions an examiner or professor can throw at you during a presentation natively:
 
-### Q1: *"Your Accuracy is ~75%. A lot of basic YouTube models claim 95% accuracy predicting direction. Isn't 75% low?"*
+### Q1: *"Your Accuracy is ~78%. A lot of basic YouTube models claim 95% accuracy predicting direction. Isn't 78% low?"*
 **Your Rebuttal:** 
 > "In highly imbalanced binary classification (like crash prediction), raw Accuracy is a junk metric known as the 'Majority Class Trap'. Given that a stock is stable ~95% of the time, a fully broken model can achieve 95% accuracy simply by guessing 'No Crash' every single day. However, its actual **Recall** (ability to catch real crashes) would be $0\%$, destroying capital. 
-> To circumvent this trap, I explicitly lowered raw accuracy intentionally by applying native Log-Loss penalty-weights `scale_pos_weight` to the algorithm. By penalizing false negatives, I forced Accuracy down to $~75\%$ (specifically **75.28%** for AAPL) in exchange for shattering the ceiling on Recall to $>50-70\%$ during testing. In risk management, avoiding structural drawdowns heavily outweighs the opportunity cost of localized false-positive alarms."
+> To circumvent this trap, I explicitly lowered raw accuracy intentionally by applying native Log-Loss penalty-weights `scale_pos_weight` to the algorithm. By penalizing false negatives, I forced Accuracy down to $~78\%$ (specifically **78.65%** for AAPL) in exchange for shattering the ceiling on Recall to $>50-70\%$ during testing. In risk management, avoiding structural drawdowns heavily outweighs the opportunity cost of localized false-positive alarms."
 
 ### Q2: *"Why do you limit your training set to just the trailing 2 years? Why didn't you train the XGBoost model on 10 years of data to give it more examples?"*
 **Your Rebuttal:** 
