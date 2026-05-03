@@ -50,9 +50,9 @@ function WatchlistItem({ item, onSelect, onRemove }) {
           <span style={{ fontSize:12, fontWeight:800, color, fontFamily:'var(--font-mono)' }}>{item.score}</span>
         )}
         <button onClick={e => { e.stopPropagation(); onRemove(item.ticker); }} aria-label={`Remove ${item.ticker}`}
-          style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:2, fontSize:16, lineHeight:1, borderRadius:4, opacity:0, transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20 }}
+          style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:2, fontSize:16, lineHeight:1, borderRadius:4, opacity:0.6, transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20 }}
           onMouseEnter={e => { e.target.style.opacity=1; e.target.style.color='var(--status-danger)'; e.target.style.background='var(--status-danger-bg)'; }}
-          onMouseLeave={e => { e.target.style.opacity=0; e.target.style.color='var(--text-muted)'; e.target.style.background='none'; }}>×</button>
+          onMouseLeave={e => { e.target.style.opacity=0.6; e.target.style.color='var(--text-muted)'; e.target.style.background='none'; }}>×</button>
       </div>
     </div>
   );

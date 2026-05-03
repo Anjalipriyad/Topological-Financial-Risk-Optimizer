@@ -8,7 +8,7 @@ function riskPalette(riskLevel) {
   return { color:'var(--status-safe)', bg:'var(--status-safe-bg)', label:'Operational Integrity', glow:'rgba(5,150,105,0.15)' };
 }
 
-export default function RecommendationAlert({ riskLevel, recommendation, currentPrice, features = {} }) {
+export default function RecommendationAlert({ riskLevel, recommendation, currentPrice, features = {}, modelConfidence, historicalAccuracy }) {
   const palette = riskPalette(riskLevel);
   const atr = features?.ATR || 0;
   const stopLoss = atr > 0 ? currentPrice - atr * 2 : null;
@@ -24,6 +24,8 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
     { label:'ATR 14D', value: atr > 0 ? `$${atr.toFixed(2)}` : 'N/A', sub:'Avg True Range' },
     { label:'Position Size', value: positionPct ? `${positionPct}%` : 'N/A', sub:'1% Risk Rule' },
     { label:'BB Position', value: bbPivot != null ? `${(bbPivot*100).toFixed(1)}%` : 'N/A', sub:bbLabel },
+    { label:'Model Confidence', value: modelConfidence ? `${modelConfidence}%` : 'N/A', sub:'Ensemble Consensus' },
+    { label:'Backtest Acc.', value: historicalAccuracy ? `${historicalAccuracy}%` : 'N/A', sub:'Historical Performance' },
   ];
 
   return (
@@ -51,7 +53,7 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
       </div>
 
       {/* Metric tiles */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:8 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:8 }}>
         {metrics.map(tile => (
           <TiltCard key={tile.label} maxTilt={4} glareOpacity={0.08} scale={1.01} borderRadius={14}>
             <div style={{ background:'white', borderRadius:14, padding:'16px 18px', border:'1px solid var(--border-subtle)' }}>

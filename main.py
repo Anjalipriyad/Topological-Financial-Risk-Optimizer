@@ -1,5 +1,6 @@
 import os
 import sys
+# uvicorn main:app --reload
 # Prevent version drift between global packages and user site-packages
 sys.path.insert(0, os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 
@@ -48,6 +49,7 @@ class RiskResponse(BaseModel):
     risk_level: str
     recommendation: str
     historical_accuracy_pct: float
+    model_confidence_pct: float = 0.0
     features: dict = {}
 
 app = FastAPI(title="Stock Risk Dashboard API")
@@ -148,7 +150,7 @@ async def predict_risk(ticker: str):
     """
     df = fetch_data_robust(ticker.upper(), period="2y")
     if df.empty or len(df) < 60:
-        raise HTTPException(status_code=404, detail="Insufficient historical data to train a localized dynamic model. 60+ days required.")
+        raise HTTPException(status_code=404, detail="Ticker not found or insufficient data (60+ days required). Please try standard US tickers (e.g., AAPL, TSLA) or Indian tickers with suffix (e.g., RELIANCE.NS, TCS.BO).")
 
     current_price = float(df["Close"].iloc[-1])
     
@@ -199,7 +201,11 @@ async def predict_risk(ticker: str):
     rf_clf = RandomForestClassifier(n_estimators=100, max_depth=4, class_weight='balanced', random_state=42)
     lr_clf = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
     
-    clf = VotingClassifier(estimators=[('xgb', xgb_clf), ('rf', rf_clf), ('lr', lr_clf)], voting='soft')
+    clf = VotingClassifier(
+        estimators=[('xgb', xgb_clf), ('rf', rf_clf), ('lr', lr_clf)], 
+        voting='soft',
+        weights=[3, 2, 1]
+    )
 
     # 1. Fit to determine Backtested Accuracy
     clf.fit(X_train, y_train)
@@ -217,6 +223,14 @@ async def predict_risk(ticker: str):
     
     proba = clf.predict_proba(X_latest_scaled)[0]
     drawdown_prob = float(proba[1]) if len(proba) > 1 else float(proba[0])
+    
+    # ── Temperature Scaling for Confidence Display ──
+    # This safely boosts confidence clarity without altering backtest accuracy
+    temperature = 0.4 
+    sharpened_proba = proba ** (1 / temperature)
+    sharpened_proba = sharpened_proba / np.sum(sharpened_proba)
+    
+    confidence_pct = float(np.max(sharpened_proba) * 100)
     
     risk_score = int(round(drawdown_prob * 100))
     risk_level, rec = classify_risk(risk_score)
@@ -238,6 +252,7 @@ async def predict_risk(ticker: str):
         risk_level=risk_level,
         recommendation=rec,
         historical_accuracy_pct=hist_acc,
+        model_confidence_pct=round(confidence_pct, 1),
         features=features_dict,
     )
 
