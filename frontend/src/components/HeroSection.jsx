@@ -4,7 +4,7 @@ import MagneticButton from './MagneticButton';
 
 const QUICK = ['NVDA', 'TSLA', 'BTC', 'RELIANCE.NS'];
 
-export default function HeroSection({ onSearch, isLoading, onNavigateResearch }) {
+export default function HeroSection({ onSearch, isLoading }) {
   const [ticker, setTicker] = useState('');
   const [vis, setVis] = useState(false);
   const [mp, setMp] = useState({ x: 0, y: 0 });
@@ -199,15 +199,6 @@ export default function HeroSection({ onSearch, isLoading, onNavigateResearch })
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; e.currentTarget.style.borderColor = 'rgba(212,168,67,0.15)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(26,26,46,0.04)'; }}>{t}</button>
           ))}
         </div>
-
-        {/* CTA link */}
-        <button onClick={onNavigateResearch} className={vis ? 'animate-fade-in-up' : ''} style={{ marginTop: 28, fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', opacity: vis ? 1 : 0, animationDelay: '1600ms', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: 8 }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--blue)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
-          Explore the research methodology
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-        </button>
-
 
       </div>
     </div>

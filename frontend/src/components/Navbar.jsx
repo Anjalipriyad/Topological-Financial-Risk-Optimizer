@@ -17,7 +17,6 @@ export default function Navbar({ page, setPage, onLogoClick, mobileSidebarOpen, 
 
   const tabs = [
     { id: 'home', label: 'Dashboard', icon: '◈' },
-    { id: 'research', label: 'Research', icon: '∂' },
   ];
 
   return (

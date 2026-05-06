@@ -8,7 +8,6 @@ import RecommendationAlert from './components/RecommendationAlert';
 import LoadingOverlay from './components/LoadingOverlay';
 import FeatureRadar from './components/FeatureRadar';
 import { WatchlistPanel, HistoryPanel } from './components/Watchlist';
-import ResearchPage from './components/ResearchPage';
 import CursorGlow from './components/CursorGlow';
 import ScrollReveal from './components/ScrollReveal';
 import './App.css';
@@ -144,7 +143,7 @@ export default function App() {
 
   const isInWatchlist = result && watchlist.some(w => w.ticker === result.ticker);
 
-  // Show sidebar only when dashboard has results/loading/error (not on hero or research)
+  // Show sidebar only when dashboard has results/loading/error (not on hero)
   const showSidebar = page === 'home' && (result || isLoading || error);
 
   return (
@@ -181,7 +180,7 @@ export default function App() {
               <HistoryPanel history={predHistory} onSelect={t => { handleSearch(t); setMobileSidebarOpen(false); }} />
               {/* Mobile nav */}
               <div className="sm:hidden" style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {[{ id: 'home', label: 'Dashboard' }, { id: 'research', label: 'Research' }].map(({ id, label }) => (
+                {[{ id: 'home', label: 'Dashboard' }].map(({ id, label }) => (
                   <button key={id} onClick={() => { switchPage(id); setMobileSidebarOpen(false); }}
                     style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: page === id ? 700 : 500, color: page === id ? 'var(--text-primary)' : 'var(--text-secondary)', background: page === id ? 'var(--bg-surface)' : 'transparent', border: 'none', borderRadius: 8, cursor: 'pointer' }}>{label}</button>
                 ))}
@@ -280,7 +279,7 @@ export default function App() {
                 <div>
                   <span className="label-xs" style={{ display: 'block', marginBottom: 12 }}>Navigation</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {[{ id: 'home', label: 'Dashboard', icon: '◈' }, { id: 'research', label: 'Research', icon: '∂' }].map(({ id, label, icon }) => (
+                    {[{ id: 'home', label: 'Dashboard', icon: '◈' }].map(({ id, label, icon }) => (
                       <button key={id} onClick={() => { switchPage(id); setToolsPanelOpen(false); }}
                         style={{ textAlign: 'left', padding: '10px 14px', fontSize: 13, fontWeight: page === id ? 700 : 500, color: page === id ? 'var(--text-primary)' : 'var(--text-secondary)', background: page === id ? 'var(--gold-bg)' : 'transparent', border: page === id ? '1px solid var(--gold-border)' : '1px solid transparent', borderRadius: 10, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center', transition: 'all 0.2s' }}>
                         <span style={{ fontSize: 11 }}>{icon}</span> {label}
@@ -389,14 +388,8 @@ export default function App() {
 
                 {/* Hero (empty state) */}
                 {!result && !isLoading && !error && (
-                  <HeroSection onSearch={handleSearch} isLoading={isLoading} onNavigateResearch={() => switchPage('research')} />
+                  <HeroSection onSearch={handleSearch} isLoading={isLoading} />
                 )}
-              </div>
-            )}
-
-            {page === 'research' && (
-              <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 32px 48px' }}>
-                <ResearchPage />
               </div>
             )}
           </main>
