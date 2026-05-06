@@ -3,8 +3,6 @@ import sys
 # uvicorn main:app --reload
 #python3 main.py 
 #python3 main.py AAPL
-# Prevent version drift between global packages and user site-packages
-sys.path.insert(0, os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 
 import json
 import numpy as np
@@ -15,7 +13,7 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
-from imblearn.over_sampling import SMOTE
+
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
