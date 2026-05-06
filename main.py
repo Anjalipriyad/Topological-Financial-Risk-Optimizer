@@ -47,6 +47,7 @@ except ImportError:
 class RiskResponse(BaseModel):
     ticker: str
     current_price: float
+    currency: str = "USD"
     hidden_risk_score: int
     risk_level: str
     recommendation: str
@@ -155,6 +156,13 @@ async def predict_risk(ticker: str):
         raise HTTPException(status_code=404, detail="Ticker not found or insufficient data (60+ days required). Please try standard US tickers (e.g., AAPL, TSLA) or Indian tickers with suffix (e.g., RELIANCE.NS, TCS.BO).")
 
     current_price = float(df["Close"].iloc[-1])
+
+    # Fetch native currency from yfinance metadata
+    try:
+        ticker_info = yf.Ticker(ticker.upper()).fast_info
+        currency = getattr(ticker_info, 'currency', None) or "USD"
+    except Exception:
+        currency = "USD"
     
     try:
         X_features, df_aligned = extract_combined_features(df, window_size=20)
@@ -250,6 +258,7 @@ async def predict_risk(ticker: str):
     return RiskResponse(
         ticker=ticker.upper(),
         current_price=round(current_price, 2),
+        currency=currency,
         hidden_risk_score=risk_score,
         risk_level=risk_level,
         recommendation=rec,
@@ -294,8 +303,9 @@ if __name__ == "__main__":
             # Run the async endpoint manually
             result = asyncio.run(predict_risk(ticker_arg))
             
+            cur = result.currency
             print("\n" + "="*60)
-            print(f" TARGET: {result.ticker} | CURRENT PRICE: ${result.current_price}")
+            print(f" TARGET: {result.ticker} | CURRENT PRICE: {result.current_price} ({cur})")
             print("="*60)
             print(f" Risk Level     : {result.risk_level.upper()}")
             print(f" Risk Score     : {result.hidden_risk_score}/100")
@@ -323,12 +333,12 @@ if __name__ == "__main__":
             
             print(f" - Position Size: {pos_size:.1f}%")
             print(f"   > RETAIL ADVICE: Your Spending Limit. Do not invest more than {pos_size:.1f}% of your total savings into this single stock.")
-            print(f" - Stop-Loss    : ${sl:.2f} (-{sl_pct:.2f}% | 2× ATR)")
-            print(f"   > RETAIL ADVICE: Your Safety Net. Tell your broker app to automatically sell if the price drops to ${sl:.2f}.")
+            print(f" - Stop-Loss    : {sl:.2f} ({cur}) (-{sl_pct:.2f}% | 2× ATR)")
+            print(f"   > RETAIL ADVICE: Your Safety Net. Tell your broker app to automatically sell if the price drops to {sl:.2f} ({cur}).")
             print(f" - BB Position  : {bb*100:.1f}%")
             print(f"   > RETAIL ADVICE: Over 80%? Too expensive, wait for a dip. Under 20%? It's on sale, good time to buy.")
-            print(f" - ATR 14D      : ${atr:.2f}")
-            print(f"   > RETAIL ADVICE: The 'Don't Panic' Meter. The stock normally wiggles ${atr:.2f} a day. Don't panic sell on normal daily drops.")
+            print(f" - ATR 14D      : {atr:.2f} ({cur})")
+            print(f"   > RETAIL ADVICE: The 'Don't Panic' Meter. The stock normally wiggles {atr:.2f} ({cur}) a day. Don't panic sell on normal daily drops.")
             
             print("============================================================\n")
             

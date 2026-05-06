@@ -1,26 +1,26 @@
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import TiltCard from './TiltCard';
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, currency }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   return (
     <div style={{ background:'var(--bg-glass-strong)', backdropFilter:'blur(16px)', border:'1px solid var(--border-default)', borderRadius:12, padding:'12px 16px', boxShadow:'var(--shadow-lg)' }}>
       <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:4 }}>{label}</p>
       <p style={{ fontSize:20, fontWeight:800, color:'var(--text-primary)', fontFamily:'var(--font-mono)' }}>
-        ${payload[0].value?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+        {payload[0].value?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})
       </p>
       {d?.high && d?.low && (
         <div style={{ display:'flex', gap:14, marginTop:8, fontSize:11, color:'var(--text-secondary)', fontWeight:500 }}>
-          <span>H <strong style={{color:'var(--text-primary)', fontFamily:'var(--font-mono)'}}>${d.high.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>
-          <span>L <strong style={{color:'var(--text-primary)', fontFamily:'var(--font-mono)'}}>${d.low.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>
+          <span>H <strong style={{color:'var(--text-primary)', fontFamily:'var(--font-mono)'}}>{d.high.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})</strong></span>
+          <span>L <strong style={{color:'var(--text-primary)', fontFamily:'var(--font-mono)'}}>{d.low.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})</strong></span>
         </div>
       )}
     </div>
   );
 };
 
-export default function PriceChart({ data = [], ticker = '', isRealData = false }) {
+export default function PriceChart({ data = [], ticker = '', isRealData = false, currency = 'USD' }) {
   if (!data.length) return null;
   const prices = data.map(d => d.close);
   const minPrice = Math.min(...prices);
@@ -41,7 +41,7 @@ export default function PriceChart({ data = [], ticker = '', isRealData = false 
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
               <span style={{ fontSize:22, fontWeight:800, color:'var(--text-primary)', letterSpacing:'-0.01em' }}>{ticker}</span>
               <span style={{ fontSize:14, color:'var(--text-muted)', fontWeight:400 }}>/</span>
-              <span style={{ fontSize:13, color:'var(--text-secondary)', fontWeight:600 }}>USD</span>
+              <span style={{ fontSize:13, color:'var(--text-secondary)', fontWeight:600 }}>{currency}</span>
               {isRealData && (
                 <span style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:12, background:'var(--status-safe-bg)', fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--status-safe)' }}>
                   <span className="animate-breathe" style={{ width:5, height:5, borderRadius:'50%', background:'var(--status-safe)', display:'inline-block' }} />Live
@@ -52,7 +52,7 @@ export default function PriceChart({ data = [], ticker = '', isRealData = false 
           </div>
           <div style={{ textAlign:'right' }}>
             <p style={{ fontSize:22, fontWeight:800, color:'var(--text-primary)', fontFamily:'var(--font-mono)' }}>
-              ${current.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+              {current.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})
             </p>
             <p style={{ fontSize:12, fontWeight:700, color:trendColor, marginTop:3, fontFamily:'var(--font-mono)' }}>
               {isPos?'+':''}{pctChange.toFixed(2)}%
@@ -73,8 +73,8 @@ export default function PriceChart({ data = [], ticker = '', isRealData = false 
               <CartesianGrid strokeDasharray="0" stroke="var(--border-subtle)" vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize:9, fill:'var(--text-muted)', fontWeight:600 }} axisLine={{ stroke:'var(--border-default)' }} tickLine={false} interval="preserveStartEnd" dy={10} />
               <YAxis domain={[minPrice*0.99, maxPrice*1.01]} tick={{ fontSize:9, fill:'var(--text-muted)', fontWeight:600, fontFamily:'var(--font-mono)' }} axisLine={false} tickLine={false} width={65}
-                tickFormatter={v=>`$${v.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`} />
-              <Tooltip content={<CustomTooltip/>} cursor={{ stroke:'var(--gold)', strokeWidth:1, strokeDasharray:'4 4' }} />
+                tickFormatter={v=>`${v.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})} ${currency}`} />
+              <Tooltip content={<CustomTooltip currency={currency} />} cursor={{ stroke:'var(--gold)', strokeWidth:1, strokeDasharray:'4 4' }} />
               <Area type="monotone" dataKey="close" stroke={isPos ? '#059669' : '#DC2626'} strokeWidth={2} fill={`url(#${gradId})`} dot={false}
                 activeDot={{ r:4, fill:'var(--text-primary)', stroke:'white', strokeWidth:2, style:{filter:'drop-shadow(0 0 4px rgba(0,0,0,0.2))'} }} />
             </AreaChart>
@@ -86,7 +86,7 @@ export default function PriceChart({ data = [], ticker = '', isRealData = false 
           <div>
             <p className="label-xs">60D Low</p>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)', marginTop:3, fontFamily:'var(--font-mono)' }}>
-              ${minPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+              {minPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})
             </p>
           </div>
           <div style={{ flex:1, position:'relative', height:4, background:'var(--border-subtle)', borderRadius:2, overflow:'hidden' }}>
@@ -96,7 +96,7 @@ export default function PriceChart({ data = [], ticker = '', isRealData = false 
           <div style={{ textAlign:'right' }}>
             <p className="label-xs">60D High</p>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)', marginTop:3, fontFamily:'var(--font-mono)' }}>
-              ${maxPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+              {maxPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})
             </p>
           </div>
         </div>

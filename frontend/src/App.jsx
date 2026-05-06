@@ -113,7 +113,7 @@ export default function App() {
       setResult(data);
       if (histData?.data?.length > 5) { setChartData(histData.data); setIsRealData(true); }
       else { setChartData(generateMockPriceData(data.current_price)); setIsRealData(false); }
-      const entry = { ticker: data.ticker, score: data.hidden_risk_score, riskLevel: data.risk_level, price: data.current_price, timestamp: new Date().toISOString() };
+      const entry = { ticker: data.ticker, score: data.hidden_risk_score, riskLevel: data.risk_level, price: data.current_price, currency: data.currency, timestamp: new Date().toISOString() };
       setPredHistory(prev => {
         const updated = [entry, ...prev.filter(h => h.ticker !== data.ticker)].slice(0, 10);
         localStorage.setItem('tfro_history', JSON.stringify(updated));
@@ -126,7 +126,7 @@ export default function App() {
 
   const addToWatchlist = () => {
     if (!result) return;
-    const item = { ticker: result.ticker, score: result.hidden_risk_score, riskLevel: result.risk_level };
+    const item = { ticker: result.ticker, score: result.hidden_risk_score, riskLevel: result.risk_level, price: result.current_price, currency: result.currency };
     setWatchlist(prev => {
       const updated = [item, ...prev.filter(w => w.ticker !== result.ticker)].slice(0, 10);
       localStorage.setItem('tfro_watchlist', JSON.stringify(updated));
@@ -250,7 +250,7 @@ export default function App() {
                     const rows = [
                       ['Field', 'Value'],
                       ['Ticker', result.ticker],
-                      ['Current Price', result.current_price],
+                      ['Current Price', `${result.current_price} (${result.currency || 'USD'})`],
                       ['Risk Score', result.hidden_risk_score],
                       ['Risk Level', result.risk_level],
                       ['Backtest Accuracy (%)', result.historical_accuracy_pct],
@@ -351,7 +351,7 @@ export default function App() {
 
                     {/* Chart */}
                     <ScrollReveal variant="fade-up" delay={100}>
-                      <PriceChart data={chartData} ticker={result.ticker} isRealData={isRealData} />
+                      <PriceChart data={chartData} ticker={result.ticker} isRealData={isRealData} currency={result.currency} />
                     </ScrollReveal>
 
                     {/* System Inference */}
@@ -369,13 +369,14 @@ export default function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                               <RiskGauge score={result.hidden_risk_score} riskLevel={result.risk_level} />
                             </div>
-                            <FeatureRadar features={result.features || {}} currentPrice={result.current_price} />
+                            <FeatureRadar features={result.features || {}} currentPrice={result.current_price} currency={result.currency} />
                           </div>
                           <div style={{ height: 1, background: 'var(--border-subtle)' }} />
                           <RecommendationAlert
                             riskLevel={result.risk_level}
                             recommendation={result.recommendation}
                             currentPrice={result.current_price}
+                            currency={result.currency}
                             features={result.features || {}}
                             modelConfidence={result.model_confidence_pct}
                             historicalAccuracy={result.historical_accuracy_pct}

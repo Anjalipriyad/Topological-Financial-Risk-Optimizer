@@ -71,7 +71,7 @@ export function HistoryPanel({ history, onSelect }) {
             onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.transform='translateX(0)'; }}>
             <div style={{ display:'flex', flexDirection:'column', minWidth:0 }}>
               <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.ticker}</span>
-              <span style={{ fontSize:11, color:'var(--text-muted)', marginTop:2, fontFamily:'var(--font-mono)' }}>${item.price?.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+              <span style={{ fontSize:11, color:'var(--text-muted)', marginTop:2, fontFamily:'var(--font-mono)' }}>{item.price?.toLocaleString(undefined,{minimumFractionDigits:2})} {item.currency || ''}</span>
             </div>
             <span style={{ fontSize:12, fontWeight:800, color:riskColor(item.riskLevel), flexShrink:0, fontFamily:'var(--font-mono)' }}>{item.score}</span>
           </button>

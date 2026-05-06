@@ -1,6 +1,6 @@
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 
-function buildRadarData(features, currentPrice) {
+function buildRadarData(features, currentPrice, currency) {
   const { RSI=50, MACD=0, BB_Width=0.05, BB_Pivot=0.5, ATR=0 } = features;
   const sigmoid = (x, k=1) => 100/(1+Math.exp(-k*x));
   return [
@@ -8,7 +8,7 @@ function buildRadarData(features, currentPrice) {
     { metric:'MACD', value:Math.round(sigmoid(MACD,80)), raw:MACD.toFixed(4), hint:MACD>0?'Bullish momentum':'Bearish momentum' },
     { metric:'Volatility', value:Math.round(Math.min(100,BB_Width*600)), raw:BB_Width.toFixed(4), hint:BB_Width>0.08?'High volatility':'Low volatility' },
     { metric:'BB Pos', value:Math.round(Math.max(0,Math.min(100,BB_Pivot*100))), raw:(BB_Pivot*100).toFixed(1)+'%', hint:BB_Pivot>0.8?'Near upper band':BB_Pivot<0.2?'Near lower band':'Mid-band' },
-    { metric:'ATR', value:currentPrice>0?Math.round(Math.min(100,(ATR/currentPrice)*3000)):50, raw:'$'+ATR.toFixed(2), hint:'Avg True Range' },
+    { metric:'ATR', value:currentPrice>0?Math.round(Math.min(100,(ATR/currentPrice)*3000)):50, raw:`${ATR.toFixed(2)} (${currency})`, hint:'Avg True Range' },
   ];
 }
 
@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-export default function FeatureRadar({ features, currentPrice }) {
+export default function FeatureRadar({ features, currentPrice, currency = 'USD' }) {
   if (!features || Object.keys(features).length === 0) {
     return (
       <div style={{ background:'var(--bg-surface)', borderRadius:16, border:'1px solid var(--border-default)', display:'flex', alignItems:'center', justifyContent:'center', height:240 }}>
@@ -33,7 +33,7 @@ export default function FeatureRadar({ features, currentPrice }) {
       </div>
     );
   }
-  const data = buildRadarData(features, currentPrice);
+  const data = buildRadarData(features, currentPrice, currency);
 
   return (
     <div style={{ background:'var(--bg-surface)', borderRadius:16, border:'1px solid var(--border-default)', padding:'20px 20px 16px' }}>

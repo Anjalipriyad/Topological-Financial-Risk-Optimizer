@@ -8,7 +8,7 @@ function riskPalette(riskLevel) {
   return { color:'var(--status-safe)', bg:'var(--status-safe-bg)', label:'Operational Integrity', glow:'rgba(5,150,105,0.15)' };
 }
 
-export default function RecommendationAlert({ riskLevel, recommendation, currentPrice, features = {}, modelConfidence, historicalAccuracy }) {
+export default function RecommendationAlert({ riskLevel, recommendation, currentPrice, currency = 'USD', features = {}, modelConfidence, historicalAccuracy }) {
   const palette = riskPalette(riskLevel);
   const atr = features?.ATR || 0;
   const stopLoss = atr > 0 ? currentPrice - atr * 2 : null;
@@ -21,9 +21,9 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
 
   const metrics = [
     { label:'Position Size', value: positionPct ? `${positionPct}%` : 'N/A', sub:'1% Risk Rule', advice: positionPct ? `Your Spending Limit: Do not invest more than ${positionPct}% of your total savings into this single stock.` : '' },
-    { label:'Stop-Loss', value: stopLoss != null ? `$${stopLoss.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : 'N/A', sub:`−${stopLossPct}% · 2× ATR`, advice: stopLoss != null ? `Your Safety Net: Tell your broker app to automatically sell if the price drops to $${stopLoss.toFixed(2)}.` : '' },
+    { label:'Stop-Loss', value: stopLoss != null ? `${stopLoss.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} (${currency})` : 'N/A', sub:`−${stopLossPct}% · 2× ATR`, advice: stopLoss != null ? `Your Safety Net: Tell your broker app to automatically sell if the price drops to ${stopLoss.toFixed(2)} (${currency}).` : '' },
     { label:'BB Position', value: bbPivot != null ? `${(bbPivot*100).toFixed(1)}%` : 'N/A', sub:bbLabel, advice: 'Over 80%? Stock is too expensive right now — wait for a dip. Under 20%? It\'s on sale — good time to buy.' },
-    { label:'ATR 14D', value: atr > 0 ? `$${atr.toFixed(2)}` : 'N/A', sub:'Avg True Range', advice: atr > 0 ? `Don't Panic Meter: This stock normally wiggles $${atr.toFixed(2)} per day. Don't panic sell on normal daily drops.` : '' },
+    { label:'ATR 14D', value: atr > 0 ? `${atr.toFixed(2)} (${currency})` : 'N/A', sub:'Avg True Range', advice: atr > 0 ? `Don't Panic Meter: This stock normally wiggles ${atr.toFixed(2)} (${currency}) per day. Don't panic sell on normal daily drops.` : '' },
     { label:'Model Confidence', value: modelConfidence ? `${modelConfidence}%` : 'N/A', sub:'Ensemble Consensus', advice: 'How strongly all 3 AI models agree on the current risk assessment. Higher = more reliable prediction.' },
     { label:'Backtest Acc.', value: historicalAccuracy ? `${historicalAccuracy}%` : 'N/A', sub:'Historical Performance', advice: 'How often the AI correctly predicted risk levels when tested against 2 years of real historical data.' },
   ];
@@ -35,7 +35,7 @@ export default function RecommendationAlert({ riskLevel, recommendation, current
         <div>
           <p className="label-xs" style={{ marginBottom:6 }}>Live Valuation</p>
           <p style={{ fontSize:40, fontWeight:900, color:'var(--text-primary)', lineHeight:1, fontFamily:'var(--font-mono)' }}>
-            ${currentPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+            {currentPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ({currency})
           </p>
           {rsiLabel && <p style={{ fontSize:12, color:'var(--text-secondary)', marginTop:8 }}>{rsiLabel}</p>}
         </div>
