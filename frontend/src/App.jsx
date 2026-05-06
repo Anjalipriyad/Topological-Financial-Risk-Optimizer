@@ -12,7 +12,7 @@ import CursorGlow from './components/CursorGlow';
 import ScrollReveal from './components/ScrollReveal';
 import './App.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? 'https://topological-financial-risk-optimizer.onrender.com' : 'http://localhost:8000');
 const HEADER_H = 64;
 
 function generateMockPriceData(currentPrice, days = 60) {
